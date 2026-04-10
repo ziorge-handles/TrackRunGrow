@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkTeamLimit } from '@/lib/plan-limits'
 import type { Sport, Gender } from '@/generated/prisma/client'
 
 export async function GET() {
@@ -54,6 +55,15 @@ export async function POST(request: NextRequest) {
 
   if (!coach) {
     return Response.json({ error: 'Coach profile not found' }, { status: 404 })
+  }
+
+  // Plan enforcement: check team limit
+  const teamCheck = await checkTeamLimit(session.user.id)
+  if (!teamCheck.allowed) {
+    return Response.json({
+      error: `Your ${teamCheck.plan} plan allows ${teamCheck.max} team(s). You currently have ${teamCheck.current}. Upgrade to Pro for unlimited teams.`,
+      upgrade: true
+    }, { status: 403 })
   }
 
   const body = await request.json() as {

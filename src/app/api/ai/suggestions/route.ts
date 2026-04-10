@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkFeatureAccess } from '@/lib/plan-limits'
 import anthropic from '@/lib/anthropic'
 import { formatTime, formatDate } from '@/lib/utils'
 
@@ -10,6 +11,12 @@ export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user || session.user.role !== 'COACH') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Plan enforcement: check AI feature access
+  const hasAI = await checkFeatureAccess(session.user.id, 'aiSuggestions')
+  if (!hasAI) {
+    return Response.json({ error: 'AI workout suggestions require a Pro or Enterprise plan. Upgrade to unlock this feature.', upgrade: true }, { status: 403 })
   }
 
   const body = await request.json() as {

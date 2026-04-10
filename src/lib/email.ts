@@ -192,6 +192,45 @@ export async function sendFeeReminder({
   await sgMail.send({ from: FROM, to, subject: `Fee reminder: ${feeName} — $${dollars} due ${dueDate}`, html })
 }
 
+export async function sendPasswordResetEmail({ to, resetUrl }: { to: string; resetUrl: string }): Promise<void> {
+  initSendGrid()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const html = baseTemplate(
+    'Reset Your Password',
+    'linear-gradient(135deg, #dc2626, #f87171)',
+    `
+    <h2>Password Reset Request</h2>
+    <p>We received a request to reset your password. Click the button below to create a new password.</p>
+    <div style="text-align:center;margin:28px 0">
+      <a href="${resetUrl}" style="display:inline-block;background:#dc2626;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Reset Password</a>
+    </div>
+    <p>This link expires in <strong>1 hour</strong>. If you didn't request this, you can safely ignore this email.</p>
+    <p class="small">If the button doesn't work, copy and paste this URL into your browser: ${resetUrl}</p>
+  `)
+
+  await sgMail.send({ from: FROM, to, subject: 'TrackRunGrow — Reset your password', html })
+}
+
+export async function sendVerificationEmail({ to, verifyUrl }: { to: string; verifyUrl: string }): Promise<void> {
+  initSendGrid()
+  if (!process.env.SENDGRID_API_KEY) return
+
+  const html = baseTemplate(
+    'Verify Your Email',
+    'linear-gradient(135deg, #059669, #34d399)',
+    `
+    <h2>Verify Your Email Address</h2>
+    <p>Thanks for signing up! Please verify your email address to activate your account.</p>
+    <div style="text-align:center;margin:28px 0">
+      <a href="${verifyUrl}" style="display:inline-block;background:#059669;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Verify Email</a>
+    </div>
+    <p>This link expires in <strong>24 hours</strong>.</p>
+  `)
+
+  await sgMail.send({ from: FROM, to, subject: 'TrackRunGrow — Verify your email', html })
+}
+
 export async function sendMessageNotification({
   to,
   senderName,

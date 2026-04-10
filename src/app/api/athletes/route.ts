@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkAthleteLimit } from '@/lib/plan-limits'
 import { sendWelcomeEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
@@ -93,6 +94,15 @@ export async function POST(request: NextRequest) {
 
   if (!name || !email || !teamId) {
     return Response.json({ error: 'name, email, and teamId are required' }, { status: 400 })
+  }
+
+  // Plan enforcement: check athlete limit
+  const athleteCheck = await checkAthleteLimit(session.user.id, teamId)
+  if (!athleteCheck.allowed) {
+    return Response.json({
+      error: `Your ${athleteCheck.plan} plan allows ${athleteCheck.max} athletes per team. You currently have ${athleteCheck.current}. Upgrade to Pro for unlimited athletes.`,
+      upgrade: true
+    }, { status: 403 })
   }
 
   // Verify coach can access this team

@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { BCRYPT_ROUNDS } from '@/lib/constants'
+import { randomBytes, createHash } from 'crypto'
+import { sendVerificationEmail } from '@/lib/email'
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -58,8 +60,31 @@ export async function POST(request: Request) {
       },
     })
 
+    // Generate email verification token
+    const verifyToken = randomBytes(32).toString('hex')
+    const hashedVerifyToken = createHash('sha256').update(verifyToken).digest('hex')
+    const verifyExpires = new Date(Date.now() + 24 * 3600000) // 24 hours
+
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token: hashedVerifyToken,
+        expires: verifyExpires,
+      },
+    })
+
+    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+    try {
+      await sendVerificationEmail({
+        to: email,
+        verifyUrl: `${baseUrl}/api/auth/verify-email?token=${verifyToken}&email=${email}`,
+      })
+    } catch (e) {
+      console.error('Failed to send verification email:', e)
+    }
+
     return NextResponse.json(
-      { message: 'Account created successfully', userId: user.id },
+      { message: 'Account created successfully. Please check your email to verify your account.', userId: user.id },
       { status: 201 },
     )
   } catch (error) {

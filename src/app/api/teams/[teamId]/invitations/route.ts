@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkFeatureAccess } from '@/lib/plan-limits'
 import { sendTeamInvitation } from '@/lib/email'
 import type { CoachRole } from '@/generated/prisma/client'
 
@@ -61,6 +62,13 @@ export async function POST(
   }
 
   const { teamId } = await params
+
+  // Plan enforcement: check coach invitation feature access
+  const hasInvitations = await checkFeatureAccess(session.user.id, 'coachInvitations')
+  if (!hasInvitations) {
+    return Response.json({ error: 'Coach invitations require a Pro or Enterprise plan. Upgrade to unlock this feature.', upgrade: true }, { status: 403 })
+  }
+
   const team = await verifyHeadCoachAccess(teamId, session.user.id)
   if (!team) {
     return Response.json({ error: 'Forbidden' }, { status: 403 })

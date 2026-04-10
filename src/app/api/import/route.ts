@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkFeatureAccess } from '@/lib/plan-limits'
 import { z } from 'zod'
 import { WorkoutType, Gender } from '@/generated/prisma/client'
 
@@ -271,6 +272,12 @@ export async function POST(request: Request): Promise<NextResponse> {
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Plan enforcement: check import/export feature access
+  const hasImport = await checkFeatureAccess(session.user.id, 'importExport')
+  if (!hasImport) {
+    return NextResponse.json({ error: 'CSV import/export requires a Pro or Enterprise plan. Upgrade to unlock this feature.', upgrade: true }, { status: 403 })
   }
 
   let formData: FormData

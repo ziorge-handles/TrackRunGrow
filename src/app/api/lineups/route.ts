@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkFeatureAccess } from '@/lib/plan-limits'
 
 export async function GET(request: Request): Promise<NextResponse> {
   const session = await auth()
@@ -41,6 +42,12 @@ export async function GET(request: Request): Promise<NextResponse> {
 export async function POST(request: Request): Promise<NextResponse> {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Plan enforcement: check meet lineup feature access
+  const hasLineups = await checkFeatureAccess(session.user.id, 'meetLineups')
+  if (!hasLineups) {
+    return NextResponse.json({ error: 'Meet lineups require a Pro or Enterprise plan. Upgrade to unlock this feature.', upgrade: true }, { status: 403 })
+  }
 
   let body: { name?: string; raceId?: string; teamId?: string; notes?: string }
   try {

@@ -13,6 +13,9 @@ export default async function proxy(req: NextRequest) {
     path === '/' ||
     path.startsWith('/login') ||
     path.startsWith('/register') ||
+    path.startsWith('/forgot-password') ||
+    path.startsWith('/reset-password') ||
+    path.startsWith('/verify-email') ||
     path.startsWith('/api/auth') ||
     path.startsWith('/api/stripe/webhook') ||
     path.startsWith('/api/invitations') ||
@@ -20,7 +23,10 @@ export default async function proxy(req: NextRequest) {
     path.startsWith('/api/contact') ||
     path.startsWith('/accept-invitation') ||
     path.startsWith('/contact') ||
-    path.startsWith('/demo')
+    path.startsWith('/demo') ||
+    path.startsWith('/terms') ||
+    path.startsWith('/privacy') ||
+    path.startsWith('/cookies')
   ) {
     return NextResponse.next()
   }

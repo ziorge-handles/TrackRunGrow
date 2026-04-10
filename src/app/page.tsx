@@ -420,6 +420,14 @@ export default async function MarketingPage() {
                   <li><Link href="/register" className="hover:text-white transition-colors">Sign Up</Link></li>
                 </ul>
               </div>
+              <div>
+                <p className="text-white font-semibold text-sm mb-3">Legal</p>
+                <ul className="space-y-2 text-sm">
+                  <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+                  <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                  <li><Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link></li>
+                </ul>
+              </div>
             </div>
           </div>
           <div className="border-t border-slate-800 mt-10 pt-8 text-center text-sm">
