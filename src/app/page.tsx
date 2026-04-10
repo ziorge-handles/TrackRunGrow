@@ -98,8 +98,25 @@ function StarRating({ rating }: { rating: number }) {
 export default async function MarketingPage() {
   const reviews = await getApprovedReviews()
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'TrackRunGrow',
+    applicationCategory: 'SportsApplication',
+    operatingSystem: 'Web',
+    description: 'The complete coaching platform for cross country and track & field teams.',
+    url: 'https://www.trackrungrow.com',
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: '5',
+      highPrice: '99',
+      priceCurrency: 'USD',
+    },
+  }
+
   return (
     <div className="min-h-screen bg-white font-sans">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur border-b border-gray-200">
@@ -132,8 +149,12 @@ export default async function MarketingPage() {
 
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <section className="relative pt-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.15),transparent_60%)]" />
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl" />
+        </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-28 sm:pt-28 sm:pb-36">
           <div className="max-w-3xl">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight">
@@ -146,7 +167,7 @@ export default async function MarketingPage() {
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
               <Link
                 href="/register"
-                className="inline-flex items-center justify-center gap-2 bg-emerald-500 text-white px-8 py-4 rounded-xl text-base font-semibold hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/25"
+                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg shadow-emerald-500/25"
               >
                 Start Today <ArrowRight className="w-4 h-4" />
               </Link>
@@ -162,7 +183,7 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── Mission Statement ──────────────────────────────────────────────── */}
-      <section className="py-16 bg-white">
+      <section id="mission" className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-8 sm:p-12">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
@@ -187,7 +208,7 @@ export default async function MarketingPage() {
             {FEATURES.map((f) => {
               const Icon = f.icon
               return (
-                <div key={f.title} className="group bg-white border border-gray-200 rounded-2xl p-6 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-50 transition-all duration-200">
+                <div key={f.title} className="group bg-white border border-gray-100 rounded-xl p-6 card-hover hover:border-emerald-300 hover:shadow-emerald-50 transition-all duration-200">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${f.color}`}>
                     <Icon className="w-6 h-6" />
                   </div>
@@ -201,7 +222,7 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── Sport Toggle ─────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">Cross Country &amp; Track Features</span>
@@ -261,10 +282,10 @@ export default async function MarketingPage() {
             {PRICING.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-2xl p-7 flex flex-col ${plan.highlight ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 text-white shadow-xl shadow-emerald-200' : 'bg-white border border-gray-200'}`}
+                className={`relative rounded-2xl p-7 flex flex-col card-hover ${plan.highlight ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 text-white shadow-xl shadow-emerald-200 border-2 border-emerald-400 scale-[1.02] z-10' : 'bg-white border border-gray-200'}`}
               >
                 {plan.highlight && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-md">
                     MOST POPULAR
                   </div>
                 )}
@@ -286,7 +307,7 @@ export default async function MarketingPage() {
                 </ul>
                 <Link
                   href="/register"
-                  className={`mt-8 block text-center py-3 rounded-xl font-semibold transition-colors ${plan.highlight ? 'bg-white text-emerald-700 hover:bg-emerald-50' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                  className={`mt-8 block text-center py-3 rounded-xl font-semibold transition-all ${plan.highlight ? 'bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg' : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-md shadow-emerald-500/15'}`}
                 >
                   {plan.cta}
                 </Link>
@@ -297,7 +318,7 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── Reviews ──────────────────────────────────────────────────────────── */}
-      <section id="reviews" className="py-20 sm:py-28 bg-gray-50">
+      <section id="reviews" className="py-20 sm:py-28 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="inline-block bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">Reviews</span>
@@ -316,10 +337,11 @@ export default async function MarketingPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
               {reviews.map((review) => (
-                <div key={review.id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div key={review.id} className="bg-white border border-gray-100 rounded-xl p-6 card-hover relative">
+                  <div className="absolute top-5 right-5 text-5xl leading-none text-gray-100 font-serif select-none" aria-hidden="true">&ldquo;</div>
                   <StarRating rating={review.rating} />
                   <h3 className="font-bold text-gray-900 mt-3">{review.title}</h3>
-                  <p className="text-sm text-gray-600 mt-2 leading-relaxed">{review.body}</p>
+                  <p className="text-sm text-gray-600 mt-2 leading-relaxed relative">{review.body}</p>
                   <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-gray-800">{review.authorName}</p>
@@ -350,7 +372,7 @@ export default async function MarketingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="mailto:ryanmelvin@trackrungrow.com"
-              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md shadow-emerald-500/15"
             >
               <Mail className="w-5 h-5" />
               ryanmelvin@trackrungrow.com

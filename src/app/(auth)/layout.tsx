@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sign In',
+  title: 'Account',
+  description: 'Sign in or create your TrackRunGrow coaching account.',
 }
 
 export default function AuthLayout({
