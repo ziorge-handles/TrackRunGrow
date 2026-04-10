@@ -98,7 +98,7 @@ export default function NewRacePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="name">Race Name</Label>
+              <Label htmlFor="name">Race Name<span className="text-red-500 ml-1">*</span></Label>
               <Input
                 id="name"
                 placeholder="e.g. Regional Championships"
@@ -111,7 +111,7 @@ export default function NewRacePage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Sport</Label>
+                <Label>Sport<span className="text-red-500 ml-1">*</span></Label>
                 <div className="flex gap-2 mt-1">
                   {(['XC', 'TRACK'] as const).map((s) => (
                     <button
@@ -131,7 +131,7 @@ export default function NewRacePage() {
               </div>
 
               <div>
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">Date<span className="text-red-500 ml-1">*</span></Label>
                 <Input
                   id="date"
                   type="date"

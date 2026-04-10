@@ -2,24 +2,21 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import {
   TrendingUp,
-  Activity,
   Trophy,
-  BarChart2,
   Calendar,
-  Brain,
   Zap,
-  Home,
+  User,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
-  { href: '/portal', label: 'Home', icon: Home, exact: true },
-  { href: '/portal/performance', label: 'My Performance', icon: TrendingUp },
-  { href: '/portal/workouts', label: 'My Workouts', icon: Activity },
+  { href: '/portal', label: 'My Profile', icon: User, exact: true },
   { href: '/portal/races', label: 'My Races', icon: Trophy },
-  { href: '/portal/metrics', label: 'Body Metrics', icon: BarChart2 },
+  { href: '/portal/performance', label: 'My Performance', icon: TrendingUp },
   { href: '/portal/calendar', label: 'Calendar', icon: Calendar },
 ]
 
@@ -72,7 +69,14 @@ export default function AthletePortalSidebar() {
         })}
       </nav>
 
-      <div className="px-4 py-4 border-t border-gray-100">
+      <div className="px-4 py-4 border-t border-gray-100 space-y-2">
+        <button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="flex items-center gap-2 text-red-500 hover:text-red-400 text-sm w-full px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </button>
         <p className="text-xs text-gray-400 text-center">
           TrackRunGrow &copy; {new Date().getFullYear()}
         </p>

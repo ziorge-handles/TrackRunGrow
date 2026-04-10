@@ -16,8 +16,10 @@ export default async function proxy(req: NextRequest) {
     path.startsWith('/api/auth') ||
     path.startsWith('/api/stripe/webhook') ||
     path.startsWith('/api/invitations') ||
-    path.startsWith('/api/reviews/all') ||
+    path.startsWith('/api/reviews') ||
+    path.startsWith('/api/contact') ||
     path.startsWith('/accept-invitation') ||
+    path.startsWith('/contact') ||
     path.startsWith('/demo')
   ) {
     return NextResponse.next()

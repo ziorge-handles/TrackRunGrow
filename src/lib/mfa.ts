@@ -2,7 +2,7 @@ import { TOTP, Secret } from 'otpauth'
 import bcrypt from 'bcryptjs'
 import { randomBytes, createCipheriv, createDecipheriv, scryptSync } from 'crypto'
 
-const ENCRYPTION_KEY = process.env.AUTH_SECRET || 'fallback-dev-key-change-in-production'
+const ENCRYPTION_KEY = process.env.AUTH_SECRET || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('AUTH_SECRET is required in production') })() : 'dev-fallback-key-not-for-production')
 
 export function encryptSecret(plaintext: string): string {
   const key = scryptSync(ENCRYPTION_KEY, 'trackrungrow-mfa-salt', 32)

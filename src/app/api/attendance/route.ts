@@ -27,6 +27,10 @@ export async function GET(request: Request): Promise<NextResponse> {
   })
   if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
 
+  const { searchParams: sp } = new URL(request.url)
+  const page = Math.max(0, parseInt(sp.get('page') ?? '0'))
+  const limit = Math.min(100, Math.max(1, parseInt(sp.get('limit') ?? '50')))
+
   // Get all athletes on the team
   const athleteTeams = await prisma.athleteTeam.findMany({
     where: { teamId, leftAt: null },
@@ -40,6 +44,8 @@ export async function GET(request: Request): Promise<NextResponse> {
         },
       },
     },
+    skip: page * limit,
+    take: limit,
   })
 
   const result = athleteTeams.map((at) => {

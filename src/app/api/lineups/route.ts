@@ -24,10 +24,15 @@ export async function GET(request: Request): Promise<NextResponse> {
   })
   if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
 
+  const page = Math.max(0, parseInt(searchParams.get('page') ?? '0'))
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50')))
+
   const lineups = await prisma.meetLineup.findMany({
     where: { teamId, ...(raceId ? { raceId } : {}) },
     include: { _count: { select: { entries: true } } },
     orderBy: { createdAt: 'desc' },
+    skip: page * limit,
+    take: limit,
   })
 
   return NextResponse.json(lineups)

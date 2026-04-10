@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Star, CheckCircle, XCircle } from 'lucide-react'
+import { Star, CheckCircle, XCircle, Trash2 } from 'lucide-react'
 
 interface Review {
   id: string
@@ -31,6 +31,21 @@ export default function AdminReviewList({ initialReviews }: { initialReviews: Re
         setReviews((prev) =>
           prev.map((r) => (r.id === reviewId ? { ...r, status: action } : r)),
         )
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  async function handleDelete(reviewId: string) {
+    if (!confirm('Are you sure you want to delete this review? This cannot be undone.')) return
+    setLoading(reviewId)
+    try {
+      const res = await fetch(`/api/reviews?id=${reviewId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setReviews((prev) => prev.filter((r) => r.id !== reviewId))
       }
     } catch {
       // Silently fail
@@ -82,26 +97,37 @@ export default function AdminReviewList({ initialReviews }: { initialReviews: Re
                   </div>
                 </div>
 
-                {review.status === 'PENDING' && (
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => handleAction(review.id, 'APPROVED')}
-                      disabled={loading === review.id}
-                      className="inline-flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                    >
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleAction(review.id, 'REJECTED')}
-                      disabled={loading === review.id}
-                      className="inline-flex items-center gap-1.5 bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
-                    >
-                      <XCircle className="w-3.5 h-3.5" />
-                      Reject
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {review.status === 'PENDING' && (
+                    <>
+                      <button
+                        onClick={() => handleAction(review.id, 'APPROVED')}
+                        disabled={loading === review.id}
+                        className="inline-flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleAction(review.id, 'REJECTED')}
+                        disabled={loading === review.id}
+                        className="inline-flex items-center gap-1.5 bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => handleDelete(review.id)}
+                    disabled={loading === review.id}
+                    className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-200 hover:text-gray-800 transition-colors disabled:opacity-50"
+                    title="Delete review"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))

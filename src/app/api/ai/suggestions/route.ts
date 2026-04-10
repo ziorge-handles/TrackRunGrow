@@ -24,6 +24,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'athleteId and weekOf are required' }, { status: 400 })
   }
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return Response.json({ error: 'AI features require an Anthropic API key. Add ANTHROPIC_API_KEY to your environment variables.' }, { status: 503 })
+  }
+
   // Verify coach can access this athlete
   const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
   if (!coach) return Response.json({ error: 'Coach profile not found' }, { status: 404 })
@@ -126,8 +130,8 @@ Please provide a complete 7-day training plan with:
   let fullResponse = ''
 
   const stream = await anthropic.messages.stream({
-    model: 'claude-opus-4-6',
-    max_tokens: 2048,
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 3000,
     messages: [{ role: 'user', content: userPrompt }],
     system: systemPrompt,
   })

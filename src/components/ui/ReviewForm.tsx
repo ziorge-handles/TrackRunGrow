@@ -52,7 +52,7 @@ export default function ReviewForm() {
       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
         <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
         <h3 className="text-xl font-bold text-emerald-800">Thank you for your review!</h3>
-        <p className="text-emerald-600 mt-2">Thank you! Your review will appear after approval.</p>
+        <p className="text-emerald-600 mt-2">Your review will appear here after a safety check!</p>
       </div>
     )
   }

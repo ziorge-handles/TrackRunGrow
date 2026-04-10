@@ -131,28 +131,34 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Access denied to some athletes' }, { status: 403 })
   }
 
-  const created = await Promise.all(
-    athleteIds.map((athleteId) =>
-      prisma.workoutLog.create({
-        data: {
-          athleteId,
-          loggedById: session.user.id,
-          date: new Date(date),
-          type,
-          title,
-          description: body.description,
-          distanceMiles: body.distanceMiles,
-          durationMin: body.durationMin,
-          avgPaceSecPerMile: body.avgPaceSecPerMile,
-          avgHR: body.avgHR,
-          perceivedEffort: body.perceivedEffort,
-          notes: body.notes,
-          intervals: body.intervals ? { create: body.intervals } : undefined,
-        },
-        include: { intervals: true },
-      }),
-    ),
-  )
+  const created = []
+  const batchSize = 10
+  for (let i = 0; i < athleteIds.length; i += batchSize) {
+    const batch = athleteIds.slice(i, i + batchSize)
+    const results = await Promise.all(
+      batch.map((athleteId) =>
+        prisma.workoutLog.create({
+          data: {
+            athleteId,
+            loggedById: session.user.id,
+            date: new Date(date),
+            type,
+            title,
+            description: body.description,
+            distanceMiles: body.distanceMiles,
+            durationMin: body.durationMin,
+            avgPaceSecPerMile: body.avgPaceSecPerMile,
+            avgHR: body.avgHR,
+            perceivedEffort: body.perceivedEffort,
+            notes: body.notes,
+            intervals: body.intervals ? { create: body.intervals } : undefined,
+          },
+          include: { intervals: true },
+        }),
+      ),
+    )
+    created.push(...results)
+  }
 
   return Response.json({ workoutLogs: created }, { status: 201 })
 }

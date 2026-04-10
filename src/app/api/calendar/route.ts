@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
     teamIds = athlete?.teams.map((at) => at.teamId) ?? []
   }
 
+  const page = Math.max(0, parseInt(searchParams.get('page') ?? '0'))
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50')))
+
   const events = await prisma.calendarEvent.findMany({
     where: {
       teamId: { in: teamIds },
@@ -63,6 +66,8 @@ export async function GET(request: NextRequest) {
       } : {}),
     },
     orderBy: { startTime: 'asc' },
+    skip: page * limit,
+    take: limit,
   })
 
   return Response.json({ events })

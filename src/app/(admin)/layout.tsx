@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import Link from 'next/link'
 import { Zap, LayoutDashboard, Users, Star, ArrowLeft } from 'lucide-react'
+import AdminLogoutButton from './AdminLogoutButton'
 
 export default async function AdminLayout({
   children,
@@ -54,14 +55,15 @@ export default async function AdminLayout({
             Manage Reviews
           </Link>
         </nav>
-        <div className="px-4 py-4 border-t border-gray-100">
+        <div className="px-4 py-4 border-t border-gray-100 space-y-2">
           <Link
-            href="/dashboard"
+            href="/"
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to Site
           </Link>
+          <AdminLogoutButton />
         </div>
       </aside>
 

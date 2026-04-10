@@ -134,6 +134,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
             {race.results.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-8">No results yet.</p>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -163,6 +164,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -181,6 +183,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
                 <CardTitle className="text-base">{eventName}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -212,6 +215,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           ))

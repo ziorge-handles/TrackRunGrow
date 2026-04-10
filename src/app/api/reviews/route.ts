@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(): Promise<NextResponse> {
@@ -47,4 +48,24 @@ export async function POST(request: Request): Promise<NextResponse> {
   })
 
   return NextResponse.json(review, { status: 201 })
+}
+
+export async function DELETE(request: NextRequest) {
+  const session = await auth()
+  if (!session?.user || session.user.role !== 'ADMIN') {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { searchParams } = request.nextUrl
+  const id = searchParams.get('id')
+  if (!id) {
+    return Response.json({ error: 'Missing review id' }, { status: 400 })
+  }
+
+  try {
+    await prisma.review.delete({ where: { id } })
+    return Response.json({ success: true })
+  } catch {
+    return Response.json({ error: 'Review not found' }, { status: 404 })
+  }
 }

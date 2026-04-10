@@ -79,7 +79,7 @@ export default function NewTeamPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="name">Team Name</Label>
+              <Label htmlFor="name">Team Name<span className="text-red-500 ml-1">*</span></Label>
               <Input
                 id="name"
                 placeholder="e.g. Varsity Cross Country"
@@ -92,7 +92,7 @@ export default function NewTeamPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Sport</Label>
+                <Label>Sport<span className="text-red-500 ml-1">*</span></Label>
                 <div className="flex gap-2 mt-1">
                   {(['XC', 'TRACK'] as const).map((s) => (
                     <button
@@ -133,7 +133,7 @@ export default function NewTeamPage() {
             </div>
 
             <div>
-              <Label htmlFor="season">Season</Label>
+              <Label htmlFor="season">Season<span className="text-red-500 ml-1">*</span></Label>
               <Input
                 id="season"
                 placeholder="e.g. 2025-2026"
@@ -152,7 +152,7 @@ export default function NewTeamPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="schoolName">School Name</Label>
+              <Label htmlFor="schoolName">School Name<span className="text-red-500 ml-1">*</span></Label>
               <Input
                 id="schoolName"
                 placeholder="e.g. Lincoln High School"

@@ -32,27 +32,21 @@ function LoginForm() {
   const { data: session, status } = useSession()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const isDemo = searchParams.get('demo') === 'true'
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: isDemo
-      ? { email: 'coach@demo.com', password: 'password123' }
-      : undefined,
   })
 
-  // Auto-fill demo credentials on mount if demo mode
+  // Redirect ?demo=true to /demo page
   useEffect(() => {
-    if (isDemo) {
-      setValue('email', 'coach@demo.com')
-      setValue('password', 'password123')
+    if (searchParams.get('demo') === 'true') {
+      router.replace('/demo')
     }
-  }, [isDemo, setValue])
+  }, [searchParams, router])
 
   // Redirect already-logged-in users based on role
   useEffect(() => {
@@ -99,12 +93,6 @@ function LoginForm() {
 
   return (
     <>
-      {isDemo && (
-        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          You&apos;re using the demo account. Click &quot;Sign in&quot; to explore the dashboard.
-        </div>
-      )}
-
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Welcome back</h2>
         <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
@@ -167,7 +155,7 @@ function LoginForm() {
 
       <div className="mt-4 pt-4 border-t border-gray-100">
         <p className="text-xs text-center text-gray-400">
-          Demo: coach@demo.com / password123
+          Want to try it out? <a href="/demo" className="text-emerald-600 hover:text-emerald-700 font-medium">Watch the demo</a>
         </p>
       </div>
     </>

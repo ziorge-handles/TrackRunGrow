@@ -114,16 +114,16 @@ export default function Sidebar() {
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px]',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors min-h-[44px]',
                       active
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                        : 'text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-900',
                     )}
                   >
                     <Icon
                       className={cn(
                         'w-4 h-4 flex-shrink-0',
-                        active ? 'text-emerald-600' : 'text-gray-400',
+                        active ? 'text-blue-600' : 'text-gray-400',
                       )}
                     />
                     {link.label}

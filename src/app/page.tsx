@@ -1,9 +1,11 @@
+export const revalidate = 60
+
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import {
   Users, TrendingUp, Brain, Trophy, Calendar, CheckSquare,
   MessageSquare, DollarSign, FileText, Tag, Download, UserCog,
-  Star, ArrowRight, Zap, MapPin, Timer,
+  Star, ArrowRight, Zap, MapPin, Timer, Mail,
 } from 'lucide-react'
 import ReviewForm from '@/components/ui/ReviewForm'
 import DemoButton from '@/components/ui/DemoButton'
@@ -73,7 +75,7 @@ const PRICING = [
     name: 'Enterprise',
     price: '$99',
     desc: 'For large programs & districts',
-    features: ['Everything in Pro', 'Multi-school support', 'Custom branding', 'Priority support', 'Data export API', 'Dedicated account manager'],
+    features: ['Everything in Pro', 'Multi-school support', 'Custom branding', 'Priority support', 'Data export API'],
     cta: 'Contact Us',
     highlight: false,
   },
@@ -112,6 +114,7 @@ export default async function MarketingPage() {
             <a href="#features" className="hover:text-gray-900 transition-colors">Features</a>
             <a href="#pricing" className="hover:text-gray-900 transition-colors">Pricing</a>
             <a href="#reviews" className="hover:text-gray-900 transition-colors">Reviews</a>
+            <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
             <Link href="/login" className="hover:text-gray-900 transition-colors">Log In</Link>
           </div>
           <Link
@@ -201,7 +204,7 @@ export default async function MarketingPage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">Multi-Sport</span>
+            <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">Cross Country &amp; Track Features</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">One platform. Two sports.</h2>
             <p className="mt-4 text-lg text-gray-500">Seamlessly switch between Cross Country and Track &amp; Field modes.</p>
           </div>
@@ -217,7 +220,7 @@ export default async function MarketingPage() {
                 </div>
               </div>
               <ul className="space-y-2.5 text-sm text-gray-600">
-                {['Course records & team scores', 'Varsity/JV split results', 'Course distance tracking (5K/8K)', 'Invitational heat management', 'Dual-meet scoring calculator', 'Season mileage reports'].map((item) => (
+                {['Team records & team scores', 'Varsity/JV split results', 'Course distance tracking (5K/8K)', 'Invitational heat management', 'Dual-meet scoring calculator', 'Season mileage reports'].map((item) => (
                   <li key={item} className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full flex-shrink-0" />{item}
                   </li>
@@ -336,6 +339,33 @@ export default async function MarketingPage() {
         </div>
       </section>
 
+      {/* ── Contact / Support ─────────────────────────────────────────────── */}
+      <section id="contact" className="py-20 bg-white">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <span className="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">Support</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">Need Help?</h2>
+          <p className="text-lg text-gray-500 mb-8">
+            We are here to help. Reach out anytime and we will get back to you within 24 hours.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="mailto:ryanmelvin@trackrungrow.com"
+              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+            >
+              <Mail className="w-5 h-5" />
+              ryanmelvin@trackrungrow.com
+            </a>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 border-2 border-emerald-600 text-emerald-700 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition-colors"
+            >
+              Contact Form
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
       <footer className="bg-slate-900 text-slate-400 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -358,6 +388,7 @@ export default async function MarketingPage() {
                   <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                   <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
                   <li><a href="#reviews" className="hover:text-white transition-colors">Reviews</a></li>
+                  <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                 </ul>
               </div>
               <div>

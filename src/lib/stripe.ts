@@ -61,7 +61,6 @@ export const PLANS = {
       'Custom branding',
       'Priority support',
       'Data export API',
-      'Dedicated account manager',
     ],
   },
 } as const
