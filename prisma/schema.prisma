@@ -1,0 +1,785 @@
+// Prisma 7 schema for TrackRunGrow
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  COACH
+  ATHLETE
+}
+
+enum Sport {
+  XC
+  TRACK
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum EventCategory {
+  SPRINT
+  MIDDLE
+  DISTANCE
+  HURDLES
+  RELAY
+  JUMP
+  THROW
+  COMBINED
+  ROAD
+}
+
+enum WorkoutType {
+  EASY_RUN
+  TEMPO
+  INTERVAL
+  LONG_RUN
+  RECOVERY
+  STRENGTH
+  CROSS_TRAINING
+  RACE
+  REST
+  CUSTOM
+}
+
+enum CalendarEventType {
+  RACE
+  PRACTICE
+  MEET
+  TEAM_MEETING
+  REST_DAY
+}
+
+enum AthleteStatus {
+  ACTIVE
+  INJURED
+  INACTIVE
+  REDSHIRT
+}
+
+enum CoachRole {
+  HEAD_COACH
+  ASSISTANT_COACH
+  VOLUNTEER
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+  INCOMPLETE
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum MessageType {
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum DocumentType {
+  FORM
+  WAIVER
+  PHOTO
+  VIDEO
+  REPORT
+  OTHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+  LATE
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─── Auth Models ──────────────────────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?
+  role           Role      @default(ATHLETE)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  coachProfile   Coach?
+  athleteProfile Athlete?
+  subscription   Subscription?
+  mfaSecret      String?   // TOTP secret (encrypted)
+  mfaEnabled     Boolean   @default(false)
+  mfaBackupCodes String[]  // hashed backup codes
+
+  @@index([email])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─── Subscription ─────────────────────────────────────────────────────────────
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  plan                 SubscriptionPlan   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+// ─── School & Team ────────────────────────────────────────────────────────────
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  mascot    String?
+  logoUrl   String?
+  city      String?
+  state     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teams Team[]
+
+  @@map("schools")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  schoolId  String
+  ownerId   String   // User.id of the head coach who created this team
+  name      String
+  sport     Sport
+  season    String
+  gender    Gender?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school         School           @relation(fields: [schoolId], references: [id])
+  coaches        CoachTeam[]
+  athletes       AthleteTeam[]
+  calendarEvents CalendarEvent[]
+  invitations    TeamInvitation[]
+
+  @@index([ownerId])
+  @@map("teams")
+}
+
+// ─── Team Invitations ─────────────────────────────────────────────────────────
+
+model TeamInvitation {
+  id           String           @id @default(cuid())
+  teamId       String
+  invitedEmail String
+  coachRole    CoachRole        @default(ASSISTANT_COACH)
+  status       InvitationStatus @default(PENDING)
+  token        String           @unique @default(cuid())
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdById  String           // User.id of coach who sent invite
+  createdAt    DateTime         @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([invitedEmail])
+  @@map("team_invitations")
+}
+
+// ─── Coach ────────────────────────────────────────────────────────────────────
+
+model Coach {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  phoneNumber String?
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teams CoachTeam[]
+
+  @@map("coaches")
+}
+
+model CoachTeam {
+  coachId   String
+  teamId    String
+  coachRole CoachRole @default(ASSISTANT_COACH)
+  isPrimary Boolean   @default(false)
+
+  coach Coach @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([coachId, teamId])
+  @@map("coach_teams")
+}
+
+// ─── Athlete ──────────────────────────────────────────────────────────────────
+
+model Athlete {
+  id             String        @id @default(cuid())
+  userId         String        @unique
+  dateOfBirth    DateTime?
+  gender         Gender?
+  graduationYear Int?
+  jerseyNumber   String?
+  status         AthleteStatus @default(ACTIVE)
+  photoUrl       String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teams             AthleteTeam[]
+  bodyMetrics       BodyMetric[]
+  workoutLogs       WorkoutLog[]
+  raceResults       RaceResult[]
+  eventEntries      AthleteEvent[]
+  aiSuggestions     AiSuggestion[]
+  personalBests     PersonalBest[]
+  lineupEntries     LineupEntry[]
+  attendance        EventAttendance[]
+  feePayments       FeePayment[]
+  documents         Document[]
+  trackingListItems TrackingListItem[]
+
+  @@index([userId])
+  @@map("athletes")
+}
+
+model AthleteTeam {
+  athleteId String
+  teamId    String
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+
+  athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([athleteId, teamId])
+  @@map("athlete_teams")
+}
+
+// ─── Body Metrics ─────────────────────────────────────────────────────────────
+
+model BodyMetric {
+  id         String   @id @default(cuid())
+  athleteId  String
+  recordedAt DateTime @default(now())
+  heightCm   Float?
+  weightKg   Float?
+  restingHR  Int?
+  maxHR      Int?
+  vo2Max     Float?
+  bodyFatPct Float?
+  notes      String?
+
+  athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+}
+
+// ─── Track Events ─────────────────────────────────────────────────────────────
+
+model TrackEvent {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  category      EventCategory
+  isRelay       Boolean       @default(false)
+  isFieldEvent  Boolean       @default(false)
+  unitLabel     String
+  lowerIsBetter Boolean       @default(true)
+
+  athleteEvents AthleteEvent[]
+  raceResults   RaceResult[]
+  personalBests PersonalBest[]
+  lineupEntries LineupEntry[]
+}
+
+model AthleteEvent {
+  id           String  @id @default(cuid())
+  athleteId    String
+  trackEventId String
+  season       String
+  isPrimary    Boolean @default(false)
+
+  athlete    Athlete    @relation(fields: [athleteId], references: [id])
+  trackEvent TrackEvent @relation(fields: [trackEventId], references: [id])
+
+  @@unique([athleteId, trackEventId, season])
+}
+
+// ─── Races & Results ──────────────────────────────────────────────────────────
+
+model Race {
+  id                String   @id @default(cuid())
+  teamId            String?
+  name              String
+  sport             Sport
+  location          String?
+  date              DateTime
+  isHome            Boolean  @default(false)
+  courseDescription String?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  results RaceResult[]
+}
+
+model RaceResult {
+  id            String   @id @default(cuid())
+  raceId        String
+  athleteId     String
+  trackEventId  String?
+  resultValue   Float
+  place         Int?
+  teamPlace     Int?
+  ageGroupPlace Int?
+  notes         String?
+  dnf           Boolean  @default(false)
+  dns           Boolean  @default(false)
+  dq            Boolean  @default(false)
+  recordedAt    DateTime @default(now())
+
+  race       Race        @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  athlete    Athlete     @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  trackEvent TrackEvent? @relation(fields: [trackEventId], references: [id])
+}
+
+model PersonalBest {
+  id           String   @id @default(cuid())
+  athleteId    String
+  trackEventId String
+  resultValue  Float
+  achievedAt   DateTime
+  raceResultId String?
+
+  athlete    Athlete    @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  trackEvent TrackEvent @relation(fields: [trackEventId], references: [id])
+
+  @@unique([athleteId, trackEventId])
+}
+
+// ─── Workout Logs ─────────────────────────────────────────────────────────────
+
+model WorkoutLog {
+  id                String      @id @default(cuid())
+  athleteId         String
+  loggedById        String
+  date              DateTime
+  type              WorkoutType
+  title             String
+  description       String?
+  distanceMiles     Float?
+  durationMin       Float?
+  avgPaceSecPerMile Float?
+  avgHR             Int?
+  perceivedEffort   Int?
+  notes             String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  athlete   Athlete           @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  intervals WorkoutInterval[]
+}
+
+model WorkoutInterval {
+  id             String  @id @default(cuid())
+  workoutLogId   String
+  setNumber      Int
+  reps           Int
+  distanceMeters Float?
+  targetPaceSec  Float?
+  actualPaceSec  Float?
+  restSeconds    Float?
+  notes          String?
+
+  workoutLog WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+}
+
+// ─── Calendar Events ──────────────────────────────────────────────────────────
+
+model CalendarEvent {
+  id          String            @id @default(cuid())
+  teamId      String?
+  createdById String
+  title       String
+  type        CalendarEventType
+  sport       Sport?
+  startTime   DateTime
+  endTime     DateTime?
+  allDay      Boolean           @default(false)
+  location    String?
+  description String?
+  color       String?
+  raceId      String?
+  isRecurring Boolean           @default(false)
+  recurRule   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  team Team? @relation(fields: [teamId], references: [id])
+}
+
+// ─── AI Suggestions ───────────────────────────────────────────────────────────
+
+model AiSuggestion {
+  id          String    @id @default(cuid())
+  athleteId   String
+  requestedBy String
+  prompt      String
+  response    String
+  sport       Sport?
+  weekOf      DateTime?
+  accepted    Boolean   @default(false)
+  dismissed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+}
+
+// ─── MFA & Extended User Fields ────────────────────────────────────────────────
+// (mfaSecret, mfaEnabled, mfaBackupCodes already on User model above)
+
+// ─── Meet Lineup ──────────────────────────────────────────────────────────────
+
+model MeetLineup {
+  id          String   @id @default(cuid())
+  raceId      String
+  teamId      String
+  createdById String
+  name        String
+  notes       String?
+  isFinalized Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  entries LineupEntry[]
+
+  @@index([raceId])
+  @@map("meet_lineups")
+}
+
+model LineupEntry {
+  id             String  @id @default(cuid())
+  lineupId       String
+  athleteId      String
+  trackEventId   String?
+  heatNumber     Int?
+  laneNumber     Int?
+  seedTime       Float?
+  qualifyingMark Float?
+  notes          String?
+  order          Int     @default(0)
+
+  lineup     MeetLineup  @relation(fields: [lineupId], references: [id], onDelete: Cascade)
+  athlete    Athlete     @relation(fields: [athleteId], references: [id])
+  trackEvent TrackEvent? @relation(fields: [trackEventId], references: [id])
+
+  @@map("lineup_entries")
+}
+
+// ─── Event Attendance ─────────────────────────────────────────────────────────
+
+model EventAttendance {
+  id               String           @id @default(cuid())
+  calendarEventId  String
+  athleteId        String
+  status           AttendanceStatus @default(PRESENT)
+  availabilityNote String?
+  checkedInAt      DateTime?
+  recordedById     String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@unique([calendarEventId, athleteId])
+  @@map("event_attendance")
+}
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+model Message {
+  id       String      @id @default(cuid())
+  teamId   String?
+  senderId String
+  subject  String?
+  body     String
+  type     MessageType @default(IN_APP)
+  sentAt   DateTime    @default(now())
+
+  recipients MessageRecipient[]
+
+  @@index([senderId])
+  @@map("messages")
+}
+
+model MessageRecipient {
+  id        String    @id @default(cuid())
+  messageId String
+  userId    String
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@map("message_recipients")
+}
+
+model ChatChannel {
+  id        String   @id @default(cuid())
+  teamId    String
+  name      String
+  isGeneral Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  messages ChatMessage[]
+
+  @@map("chat_channels")
+}
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  channelId String
+  senderId  String
+  body      String
+  editedAt  DateTime?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  channel   ChatChannel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  reactions ChatReaction[]
+
+  @@index([channelId, createdAt])
+  @@map("chat_messages")
+}
+
+model ChatReaction {
+  id        String @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("chat_reactions")
+}
+
+// ─── Team Fees ────────────────────────────────────────────────────────────────
+
+model TeamFee {
+  id          String    @id @default(cuid())
+  teamId      String
+  name        String
+  amount      Int
+  dueDate     DateTime?
+  description String?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  payments FeePayment[]
+
+  @@map("team_fees")
+}
+
+model FeePayment {
+  id                    String    @id @default(cuid())
+  feeId                 String
+  athleteId             String
+  status                FeeStatus @default(PENDING)
+  amountPaid            Int       @default(0)
+  stripePaymentIntentId String?
+  paidAt                DateTime?
+  notes                 String?
+  createdAt             DateTime  @default(now())
+
+  fee     TeamFee @relation(fields: [feeId], references: [id], onDelete: Cascade)
+  athlete Athlete @relation(fields: [athleteId], references: [id])
+
+  @@unique([feeId, athleteId])
+  @@map("fee_payments")
+}
+
+// ─── Documents & Photos ───────────────────────────────────────────────────────
+
+model Document {
+  id           String       @id @default(cuid())
+  teamId       String?
+  athleteId    String?
+  uploadedById String
+  name         String
+  type         DocumentType
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  description  String?
+  isPublic     Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+
+  athlete Athlete? @relation(fields: [athleteId], references: [id])
+
+  @@index([teamId])
+  @@index([athleteId])
+  @@map("documents")
+}
+
+// ─── Tracking Lists ───────────────────────────────────────────────────────────
+
+model TrackingList {
+  id          String   @id @default(cuid())
+  teamId      String
+  createdById String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items TrackingListItem[]
+
+  @@map("tracking_lists")
+}
+
+model TrackingListItem {
+  id          String    @id @default(cuid())
+  listId      String
+  athleteId   String
+  notes       String?
+  isComplete  Boolean   @default(false)
+  completedAt DateTime?
+  addedById   String
+  createdAt   DateTime  @default(now())
+
+  list    TrackingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  athlete Athlete      @relation(fields: [athleteId], references: [id])
+
+  @@unique([listId, athleteId])
+  @@map("tracking_list_items")
+}
+
+// ─── Trainer Activity Reports ─────────────────────────────────────────────────
+
+model TrainerReport {
+  id         String   @id @default(cuid())
+  teamId     String
+  authorId   String
+  title      String
+  reportDate DateTime
+  content    String
+  athleteIds String[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([teamId, reportDate])
+  @@map("trainer_reports")
+}
+
+// ─── Public Reviews ───────────────────────────────────────────────────────────
+
+model Review {
+  id          String       @id @default(cuid())
+  authorName  String
+  authorRole  String
+  authorOrg   String?
+  rating      Int
+  title       String
+  body        String
+  status      ReviewStatus @default(PENDING)
+  isVerified  Boolean      @default(false)
+  submittedAt DateTime     @default(now())
+  approvedAt  DateTime?
+  approvedBy  String?
+
+  @@index([status, submittedAt])
+  @@map("reviews")
+}

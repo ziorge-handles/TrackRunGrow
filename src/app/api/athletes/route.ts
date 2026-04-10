@@ -1,0 +1,170 @@
+import { NextRequest } from 'next/server'
+import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { sendWelcomeEmail } from '@/lib/email'
+import bcrypt from 'bcryptjs'
+
+export async function GET(request: NextRequest) {
+  const session = await auth()
+  if (!session?.user || session.user.role !== 'COACH') {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { searchParams } = request.nextUrl
+  const teamId = searchParams.get('teamId')
+  const status = searchParams.get('status')
+
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
+  if (!coach) return Response.json({ athletes: [] })
+
+  // Determine accessible team IDs
+  let accessibleTeamIds: string[]
+
+  if (teamId) {
+    // Verify this coach can access the team
+    const team = await prisma.team.findFirst({
+      where: {
+        id: teamId,
+        OR: [
+          { ownerId: session.user.id },
+          { coaches: { some: { coachId: coach.id } } },
+        ],
+      },
+    })
+    if (!team) return Response.json({ error: 'Forbidden' }, { status: 403 })
+    accessibleTeamIds = [teamId]
+  } else {
+    const teams = await prisma.team.findMany({
+      where: {
+        OR: [
+          { ownerId: session.user.id },
+          { coaches: { some: { coachId: coach.id } } },
+        ],
+      },
+      select: { id: true },
+    })
+    accessibleTeamIds = teams.map((t) => t.id)
+  }
+
+  const athletes = await prisma.athlete.findMany({
+    where: {
+      teams: { some: { teamId: { in: accessibleTeamIds } } },
+      ...(status ? { status: status as 'ACTIVE' | 'INJURED' | 'INACTIVE' | 'REDSHIRT' } : {}),
+    },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      teams: {
+        include: {
+          team: { select: { id: true, name: true, sport: true } },
+        },
+      },
+      bodyMetrics: {
+        orderBy: { recordedAt: 'desc' },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  })
+
+  return Response.json({ athletes })
+}
+
+export async function POST(request: NextRequest) {
+  const session = await auth()
+  if (!session?.user || session.user.role !== 'COACH') {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
+  if (!coach) return Response.json({ error: 'Coach profile not found' }, { status: 404 })
+
+  const body = await request.json() as {
+    name: string
+    email: string
+    teamId: string
+    graduationYear?: number
+    jerseyNumber?: string
+    gender?: 'MALE' | 'FEMALE' | 'OTHER'
+  }
+
+  const { name, email, teamId, graduationYear, jerseyNumber, gender } = body
+
+  if (!name || !email || !teamId) {
+    return Response.json({ error: 'name, email, and teamId are required' }, { status: 400 })
+  }
+
+  // Verify coach can access this team
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+      OR: [
+        { ownerId: session.user.id },
+        { coaches: { some: { coachId: coach.id } } },
+      ],
+    },
+  })
+  if (!team) return Response.json({ error: 'Forbidden' }, { status: 403 })
+
+  // Check if user with this email already exists
+  let user = await prisma.user.findUnique({ where: { email } })
+  let athlete = user ? await prisma.athlete.findUnique({ where: { userId: user.id } }) : null
+
+  if (!user) {
+    // Create user with temporary password
+    const tempPassword = Math.random().toString(36).slice(-10)
+    const passwordHash = await bcrypt.hash(tempPassword, 10)
+
+    user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        role: 'ATHLETE',
+        passwordHash,
+      },
+    })
+  }
+
+  if (!athlete) {
+    athlete = await prisma.athlete.create({
+      data: {
+        userId: user.id,
+        graduationYear,
+        jerseyNumber,
+        gender,
+        status: 'ACTIVE',
+      },
+    })
+  }
+
+  // Add to team if not already a member
+  const existingMembership = await prisma.athleteTeam.findUnique({
+    where: { athleteId_teamId: { athleteId: athlete.id, teamId } },
+  })
+
+  if (!existingMembership) {
+    await prisma.athleteTeam.create({
+      data: { athleteId: athlete.id, teamId },
+    })
+  }
+
+  // Send welcome email
+  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+  try {
+    await sendWelcomeEmail({
+      to: email,
+      name,
+    })
+  } catch (err) {
+    console.error('Failed to send welcome email:', err)
+  }
+
+  const fullAthlete = await prisma.athlete.findUnique({
+    where: { id: athlete.id },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      teams: { include: { team: true } },
+    },
+  })
+
+  return Response.json({ athlete: fullAthlete }, { status: 201 })
+}
