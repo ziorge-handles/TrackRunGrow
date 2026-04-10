@@ -52,7 +52,7 @@ export default function ReviewForm() {
       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
         <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
         <h3 className="text-xl font-bold text-emerald-800">Thank you for your review!</h3>
-        <p className="text-emerald-600 mt-2">Your review has been submitted and is pending approval. We appreciate your feedback!</p>
+        <p className="text-emerald-600 mt-2">Thank you! Your review will appear after approval.</p>
       </div>
     )
   }
@@ -88,7 +88,7 @@ export default function ReviewForm() {
             value={form.authorName}
             onChange={(e) => setForm((f) => ({ ...f, authorName: e.target.value }))}
             placeholder="Coach Jane Smith"
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             required
           />
         </div>
@@ -99,7 +99,7 @@ export default function ReviewForm() {
             value={form.authorRole}
             onChange={(e) => setForm((f) => ({ ...f, authorRole: e.target.value }))}
             placeholder="Head XC Coach"
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             required
           />
         </div>
@@ -112,7 +112,7 @@ export default function ReviewForm() {
           value={form.authorOrg}
           onChange={(e) => setForm((f) => ({ ...f, authorOrg: e.target.value }))}
           placeholder="Lincoln High School"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
       </div>
 
@@ -123,7 +123,7 @@ export default function ReviewForm() {
           value={form.title}
           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
           placeholder="Best coaching tool I've used"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           required
         />
       </div>
@@ -135,7 +135,7 @@ export default function ReviewForm() {
           onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
           placeholder="Share your experience with TrackRunGrow…"
           rows={5}
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none"
           required
         />
       </div>

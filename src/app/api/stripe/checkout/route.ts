@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       create: {
         userId: session.user.id,
         stripeCustomerId: customerId,
-        plan: 'FREE',
+        plan: 'BASIC',
         status: 'ACTIVE',
       },
     })

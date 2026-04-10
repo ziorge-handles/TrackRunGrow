@@ -197,7 +197,10 @@ export default async function DashboardPage() {
                       <p className="text-sm font-medium text-gray-900">
                         {result.athlete.user.name}
                       </p>
-                      <p className="text-xs text-gray-400">{result.race.name}</p>
+                      <p className="text-xs text-gray-400">
+                        {result.race.name}
+                        {result.trackEvent ? ` — ${result.trackEvent.name}` : ''}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-mono font-medium text-gray-900">

@@ -14,6 +14,7 @@ datasource db {
 enum Role {
   COACH
   ATHLETE
+  ADMIN
 }
 
 enum Sport {
@@ -74,7 +75,7 @@ enum CoachRole {
 }
 
 enum SubscriptionPlan {
-  FREE
+  BASIC
   PRO
   ENTERPRISE
 }
@@ -202,7 +203,7 @@ model Subscription {
   userId               String             @unique
   stripeCustomerId     String?            @unique
   stripeSubscriptionId String?            @unique
-  plan                 SubscriptionPlan   @default(FREE)
+  plan                 SubscriptionPlan   @default(BASIC)
   status               SubscriptionStatus @default(ACTIVE)
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean            @default(false)

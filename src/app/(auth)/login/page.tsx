@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { signIn, useSession } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,17 +19,54 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const isDemo = searchParams.get('demo') === 'true'
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: isDemo
+      ? { email: 'coach@demo.com', password: 'password123' }
+      : undefined,
   })
+
+  // Auto-fill demo credentials on mount if demo mode
+  useEffect(() => {
+    if (isDemo) {
+      setValue('email', 'coach@demo.com')
+      setValue('password', 'password123')
+    }
+  }, [isDemo, setValue])
+
+  // Redirect already-logged-in users based on role
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const role = session.user.role
+      if (role === 'ATHLETE') {
+        router.push('/portal')
+      } else if (role === 'ADMIN') {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
+    }
+  }, [status, session, router])
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
@@ -45,8 +82,13 @@ export default function LoginPage() {
       if (result?.error) {
         setError('Invalid email or password. Please try again.')
       } else {
-        router.push('/dashboard')
+        // Force a session refresh so we can read the role
         router.refresh()
+        // The useEffect above will handle redirection based on role
+        // As a fallback, redirect to dashboard after a brief delay
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 500)
       }
     } catch {
       setError('An unexpected error occurred. Please try again.')
@@ -57,6 +99,12 @@ export default function LoginPage() {
 
   return (
     <>
+      {isDemo && (
+        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          You&apos;re using the demo account. Click &quot;Sign in&quot; to explore the dashboard.
+        </div>
+      )}
+
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Welcome back</h2>
         <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>

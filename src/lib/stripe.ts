@@ -18,21 +18,24 @@ export const stripe: Stripe = new Proxy({} as Stripe, {
 })
 
 export const PLANS = {
-  FREE: {
-    name: 'Free',
-    price: 0,
-    priceId: null,
+  BASIC: {
+    name: 'Basic',
+    price: 500,
+    desc: '1 team, up to 25 athletes',
+    priceId: process.env.STRIPE_BASIC_PRICE_ID || null,
     features: [
       '1 team',
-      'Up to 15 athletes',
-      'Basic performance tracking',
+      'Up to 25 athletes',
+      'Performance tracking',
       'Race results',
       'Workout logs',
+      'Calendar',
     ],
   },
   PRO: {
     name: 'Pro',
     price: 2900,
+    desc: 'Unlimited teams, unlimited athletes',
     priceId: process.env.STRIPE_PRO_PRICE_ID || null,
     features: [
       'Unlimited teams',
@@ -43,19 +46,22 @@ export const PLANS = {
       'Body metrics tracking',
       'Full calendar',
       'Athlete portal',
+      'Meet lineups',
+      'CSV import/export',
     ],
   },
   ENTERPRISE: {
     name: 'Enterprise',
     price: 9900,
+    desc: 'For large programs and districts',
     priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || null,
     features: [
       'Everything in Pro',
       'Multi-school support',
       'Custom branding',
       'Priority support',
-      'Data export',
-      'API access',
+      'Data export API',
+      'Dedicated account manager',
     ],
   },
 } as const

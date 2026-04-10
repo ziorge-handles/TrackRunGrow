@@ -14,6 +14,9 @@ export default async function AthleteLayout({
   }
 
   if (session.user.role !== 'ATHLETE') {
+    if (session.user.role === 'ADMIN') {
+      redirect('/admin')
+    }
     redirect('/dashboard')
   }
 

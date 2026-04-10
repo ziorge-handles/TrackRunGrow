@@ -2,24 +2,27 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function POST(request: Request): Promise<NextResponse> {
+async function handleModeration(request: Request): Promise<NextResponse> {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (session.user.role !== 'COACH') {
-    return NextResponse.json({ error: 'Only coaches can moderate reviews' }, { status: 403 })
+  if (session.user.role !== 'COACH' && session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Only coaches and admins can moderate reviews' }, { status: 403 })
   }
 
-  let body: { reviewId?: string; action?: 'approve' | 'reject' }
+  let body: { reviewId?: string; action?: 'approve' | 'reject'; status?: 'APPROVED' | 'REJECTED' }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { reviewId, action } = body
+  const { reviewId } = body
+  // Support both "action" (legacy) and "status" (new admin panel) formats
+  const action = body.action ?? (body.status === 'APPROVED' ? 'approve' : body.status === 'REJECTED' ? 'reject' : undefined)
+
   if (!reviewId || !action) {
-    return NextResponse.json({ error: 'reviewId and action are required' }, { status: 400 })
+    return NextResponse.json({ error: 'reviewId and action/status are required' }, { status: 400 })
   }
   if (action !== 'approve' && action !== 'reject') {
     return NextResponse.json({ error: "action must be 'approve' or 'reject'" }, { status: 400 })
@@ -37,4 +40,12 @@ export async function POST(request: Request): Promise<NextResponse> {
   })
 
   return NextResponse.json(updated)
+}
+
+export async function POST(request: Request): Promise<NextResponse> {
+  return handleModeration(request)
+}
+
+export async function PATCH(request: Request): Promise<NextResponse> {
+  return handleModeration(request)
 }

@@ -26,7 +26,7 @@ export default async function SettingsPage() {
     select: { id: true, name: true, email: true, createdAt: true },
   })
 
-  const plan = (subscription?.plan ?? 'FREE') as keyof typeof PLANS
+  const plan = (subscription?.plan ?? 'BASIC') as keyof typeof PLANS
   const planInfo = PLANS[plan]
 
   return (
@@ -65,16 +65,16 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Subscription */}
-      <Card className={plan !== 'FREE' ? 'border-emerald-200' : ''}>
+      <Card className={plan !== 'BASIC' ? 'border-emerald-200' : ''}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Crown className={`w-4 h-4 ${plan === 'FREE' ? 'text-gray-400' : 'text-emerald-600'}`} />
+              <Crown className={`w-4 h-4 ${plan === 'BASIC' ? 'text-gray-400' : 'text-emerald-600'}`} />
               Subscription
             </CardTitle>
             <Badge
               className={
-                plan === 'FREE' ? 'bg-gray-100 text-gray-700' :
+                plan === 'BASIC' ? 'bg-gray-100 text-gray-700' :
                 plan === 'PRO' ? 'bg-emerald-100 text-emerald-800' :
                 'bg-purple-100 text-purple-800'
               }
@@ -118,7 +118,7 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Pricing Preview */}
-      {plan === 'FREE' && (
+      {plan === 'BASIC' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {(['PRO', 'ENTERPRISE'] as const).map((planKey) => {
             const p = PLANS[planKey]

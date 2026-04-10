@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma'
 import {
   Users, TrendingUp, Brain, Trophy, Calendar, CheckSquare,
   MessageSquare, DollarSign, FileText, Tag, Download, UserCog,
-  Star, ArrowRight, PlayCircle, Zap, MapPin, Timer,
+  Star, ArrowRight, Zap, MapPin, Timer,
 } from 'lucide-react'
 import ReviewForm from '@/components/ui/ReviewForm'
+import DemoButton from '@/components/ui/DemoButton'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -53,26 +54,26 @@ const FEATURES = [
 
 const PRICING = [
   {
-    name: 'Free',
-    price: '$0',
-    desc: 'Perfect for getting started',
-    features: ['Up to 25 athletes', 'Race results & performance tracking', 'Team calendar', 'Basic messaging', 'Community support'],
-    cta: 'Get Started Free',
+    name: 'Basic',
+    price: '$5',
+    desc: '1 team, up to 25 athletes',
+    features: ['1 team', 'Up to 25 athletes', 'Performance tracking', 'Race results', 'Workout logs', 'Calendar'],
+    cta: 'Start Today',
     highlight: false,
   },
   {
     name: 'Pro',
     price: '$29',
-    desc: 'For serious coaching programs',
-    features: ['Unlimited athletes', 'AI workout generation', 'Stripe fee collection', 'Advanced analytics & charts', 'CSV/JSON import & export', 'Priority support', 'All Free features'],
-    cta: 'Start Pro Free',
+    desc: 'Unlimited teams, unlimited athletes',
+    features: ['Unlimited teams', 'Unlimited athletes', 'AI workout suggestions', 'Advanced analytics & projections', 'Coach invitations', 'Body metrics tracking', 'Full calendar', 'Athlete portal', 'Meet lineups', 'CSV import/export'],
+    cta: 'Start Today',
     highlight: true,
   },
   {
     name: 'Enterprise',
     price: '$99',
     desc: 'For large programs & districts',
-    features: ['Multiple teams & sports', 'District-level reporting', 'Custom integrations', 'Dedicated account manager', 'SLA & compliance support', 'All Pro features'],
+    features: ['Everything in Pro', 'Multi-school support', 'Custom branding', 'Priority support', 'Data export API', 'Dedicated account manager'],
     cta: 'Contact Us',
     highlight: false,
   },
@@ -117,7 +118,7 @@ export default async function MarketingPage() {
             href="/register"
             className="hidden md:inline-flex items-center gap-1.5 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors"
           >
-            Start Free <ArrowRight className="w-3.5 h-3.5" />
+            Start Today <ArrowRight className="w-3.5 h-3.5" />
           </Link>
           <div className="flex md:hidden items-center gap-3">
             <Link href="/login" className="text-sm font-medium text-gray-600">Log In</Link>
@@ -132,10 +133,6 @@ export default async function MarketingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.15),transparent_60%)]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-28 sm:pt-28 sm:pb-36">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-full text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              Free During Beta — No Credit Card Required
-            </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight">
               The Complete Coaching Platform for{' '}
               <span className="text-emerald-400">Cross Country &amp; Track</span>
@@ -148,27 +145,9 @@ export default async function MarketingPage() {
                 href="/register"
                 className="inline-flex items-center justify-center gap-2 bg-emerald-500 text-white px-8 py-4 rounded-xl text-base font-semibold hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/25"
               >
-                Start Free Today <ArrowRight className="w-4 h-4" />
+                Start Today <ArrowRight className="w-4 h-4" />
               </Link>
-              <a
-                href="#features"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 text-white border border-white/20 px-8 py-4 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors backdrop-blur"
-              >
-                <PlayCircle className="w-4 h-4" /> Watch Demo
-              </a>
-            </div>
-            {/* Stat cards */}
-            <div className="grid grid-cols-3 gap-4 mt-14 max-w-lg">
-              {[
-                { label: 'Athletes Tracked', value: '247' },
-                { label: 'Races Logged', value: '1,842' },
-                { label: 'Avg Improvement', value: '23 ms' },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-white/10 border border-white/20 backdrop-blur rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-emerald-300">{stat.value}</p>
-                  <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
-                </div>
-              ))}
+              <DemoButton />
             </div>
           </div>
         </div>
@@ -176,6 +155,18 @@ export default async function MarketingPage() {
           <svg className="absolute bottom-0 w-full" viewBox="0 0 1440 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M0 64L1440 64L1440 0C1200 48 800 64 720 64C640 64 240 48 0 0L0 64Z" fill="white" />
           </svg>
+        </div>
+      </section>
+
+      {/* ── Mission Statement ──────────────────────────────────────────────── */}
+      <section className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-8 sm:p-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
+            <p className="text-lg text-gray-700 leading-relaxed">
+              Here at TRG, we believe data can be an extremely powerful tool in assisting coaches and runners in their journey. Insights into performances, recovery, and various important pieces can not only boost the gains for athletes during a season, but over their lifetime.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -260,12 +251,8 @@ export default async function MarketingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">Pricing</span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Start free. Scale when you&apos;re ready.</h2>
-            <p className="mt-4 text-lg text-gray-500">All plans are free during beta. Pricing activates at launch.</p>
-          </div>
-          <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl px-6 py-4 text-center mb-10 max-w-2xl mx-auto shadow-lg shadow-emerald-200">
-            <p className="font-bold text-lg">FREE DURING BETA</p>
-            <p className="text-emerald-100 text-sm mt-1">Early users get 3 months free on Pro when billing starts. No credit card ever required for beta.</p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Simple, transparent pricing</h2>
+            <p className="mt-4 text-lg text-gray-500">Choose the plan that fits your program.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {PRICING.map((plan) => (
@@ -283,13 +270,13 @@ export default async function MarketingPage() {
                   <p className={`text-sm mt-1 ${plan.highlight ? 'text-emerald-200' : 'text-gray-500'}`}>{plan.desc}</p>
                   <div className="flex items-baseline gap-1 mt-4">
                     <span className={`text-4xl font-extrabold ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>{plan.price}</span>
-                    {plan.price !== '$0' && <span className={`text-sm ${plan.highlight ? 'text-emerald-200' : 'text-gray-400'}`}>/mo</span>}
+                    <span className={`text-sm ${plan.highlight ? 'text-emerald-200' : 'text-gray-400'}`}>/mo</span>
                   </div>
                 </div>
                 <ul className="mt-6 space-y-3 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm">
-                      <span className={`w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 text-xs ${plan.highlight ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-600'}`}>✓</span>
+                      <span className={`w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 text-xs ${plan.highlight ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-600'}`}>&#10003;</span>
                       <span className={plan.highlight ? 'text-emerald-100' : 'text-gray-600'}>{f}</span>
                     </li>
                   ))}
@@ -303,9 +290,6 @@ export default async function MarketingPage() {
               </div>
             ))}
           </div>
-          <p className="text-center text-sm text-gray-400 mt-8">
-            Pricing activates when beta ends. Early users get 3 months free on Pro.
-          </p>
         </div>
       </section>
 
@@ -316,14 +300,15 @@ export default async function MarketingPage() {
             <span className="inline-block bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">Reviews</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">What Coaches Are Saying</h2>
             <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto">
-              Real reviews from coaches who use TrackRunGrow — submit yours below
+              Real reviews from coaches who use TrackRunGrow
             </p>
           </div>
 
           {reviews.length === 0 ? (
             <div className="text-center py-12 bg-white border border-gray-200 rounded-2xl max-w-lg mx-auto mb-16">
               <Star className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">Be the first to leave a review after trying the platform.</p>
+              <p className="text-gray-600 font-medium text-lg mb-2">Be the first to share your experience</p>
+              <p className="text-gray-400 text-sm">Submit a review below and help other coaches discover TrackRunGrow.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
@@ -379,13 +364,13 @@ export default async function MarketingPage() {
                 <p className="text-white font-semibold text-sm mb-3">Account</p>
                 <ul className="space-y-2 text-sm">
                   <li><Link href="/login" className="hover:text-white transition-colors">Log In</Link></li>
-                  <li><Link href="/register" className="hover:text-white transition-colors">Sign Up Free</Link></li>
+                  <li><Link href="/register" className="hover:text-white transition-colors">Sign Up</Link></li>
                 </ul>
               </div>
             </div>
           </div>
           <div className="border-t border-slate-800 mt-10 pt-8 text-center text-sm">
-            &copy; 2025 TrackRunGrow. All rights reserved.
+            &copy; {new Date().getFullYear()} TrackRunGrow. All rights reserved.
           </div>
         </div>
       </footer>

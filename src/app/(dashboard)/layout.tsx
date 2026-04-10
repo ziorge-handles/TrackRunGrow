@@ -14,7 +14,7 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  if (session.user.role !== 'COACH') {
+  if (session.user.role === 'ATHLETE') {
     redirect('/portal')
   }
 

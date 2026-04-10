@@ -17,7 +17,8 @@ export default async function proxy(req: NextRequest) {
     path.startsWith('/api/stripe/webhook') ||
     path.startsWith('/api/invitations') ||
     path.startsWith('/api/reviews/all') ||
-    path.startsWith('/accept-invitation')
+    path.startsWith('/accept-invitation') ||
+    path.startsWith('/demo')
   ) {
     return NextResponse.next()
   }
@@ -29,7 +30,7 @@ export default async function proxy(req: NextRequest) {
     cookieStore.get('__Secure-authjs.session-token')?.value
 
   // No session → redirect to login
-  if (!sessionToken && (path.startsWith('/dashboard') || path.startsWith('/portal'))) {
+  if (!sessionToken && (path.startsWith('/dashboard') || path.startsWith('/portal') || path.startsWith('/admin'))) {
     const loginUrl = new URL('/login', req.nextUrl)
     loginUrl.searchParams.set('callbackUrl', path)
     return NextResponse.redirect(loginUrl)

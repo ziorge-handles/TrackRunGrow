@@ -50,6 +50,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id
         token.role = (user as { role: Role }).role
       }
+      // Refresh role from DB to catch ADMIN promotions
+      if (token.id && !user) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true },
+          })
+          if (dbUser) {
+            token.role = dbUser.role
+          }
+        } catch {
+          // Keep existing role on DB errors
+        }
+      }
       return token
     },
     async session({ session, token }) {

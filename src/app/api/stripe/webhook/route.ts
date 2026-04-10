@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 function getPlanFromPriceId(priceId: string): SubscriptionPlan {
   if (priceId === process.env.STRIPE_PRO_PRICE_ID) return 'PRO'
   if (priceId === process.env.STRIPE_ENTERPRISE_PRICE_ID) return 'ENTERPRISE'
-  return 'FREE'
+  return 'BASIC'
 }
 
 function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         const customerId = session.customer as string
         const subscriptionId = session.subscription as string
         const userId = session.metadata?.userId
-        const planKey = (session.metadata?.plan ?? 'FREE') as SubscriptionPlan
+        const planKey = (session.metadata?.plan ?? 'BASIC') as SubscriptionPlan
 
         if (!userId) break
 
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         const stripeSub = event.data.object as Stripe.Subscription
         const firstItem = stripeSub.items.data[0]
         const priceId = firstItem?.price.id
-        const plan = priceId ? getPlanFromPriceId(priceId) : 'FREE'
+        const plan = priceId ? getPlanFromPriceId(priceId) : 'BASIC'
         const status = mapStripeStatus(stripeSub.status)
         const periodEnd = firstItem?.current_period_end
           ? new Date(firstItem.current_period_end * 1000)
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
           where: { stripeSubscriptionId: stripeSub.id },
           data: {
             status: 'CANCELED',
-            plan: 'FREE',
+            plan: 'BASIC',
             cancelAtPeriodEnd: false,
           },
         })

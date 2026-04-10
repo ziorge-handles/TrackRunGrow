@@ -69,7 +69,7 @@ export default function SettingsClient({ plan, hasStripeCustomer }: Props) {
       )}
 
       <div className="flex flex-wrap gap-3">
-        {plan === 'FREE' && (
+        {plan === 'BASIC' && (
           <>
             <Button
               variant="primary"
