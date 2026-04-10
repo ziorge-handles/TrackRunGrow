@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Activity } from 'lucide-react'
 import { WORKOUT_TYPE_LABELS, WORKOUT_TYPE_COLORS } from '@/lib/constants'
-import { formatDate, formatTime } from '@/lib/utils'
+import { formatPace, formatTime } from '@/lib/utils'
 
 interface PageProps {
   searchParams: Promise<{ week?: string }>

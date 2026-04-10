@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -35,6 +35,19 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">Create account</h2>
+        <p className="text-sm text-gray-500 mt-1">Loading...</p>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
+  )
+}
+
+function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const selectedPlan = searchParams.get('plan')
