@@ -13,7 +13,7 @@ function initSendGrid(): void {
   _initialized = true
 }
 
-const FROM = 'TrackRunGrow <noreply@trackrungrow.com>'
+const FROM = process.env.SENDGRID_FROM_EMAIL || 'TrackRunGrow <ryanmelvin1200@gmail.com>'
 
 function baseTemplate(title: string, headerColor: string, body: string): string {
   return `
