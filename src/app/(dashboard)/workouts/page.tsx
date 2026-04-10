@@ -4,10 +4,10 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Activity } from 'lucide-react'
 import { WORKOUT_TYPE_LABELS, WORKOUT_TYPE_COLORS } from '@/lib/constants'
-import { formatDate, formatPace, formatTime } from '@/lib/utils'
+import { formatDate, formatTime } from '@/lib/utils'
 
 interface PageProps {
   searchParams: Promise<{ week?: string }>
@@ -89,7 +89,7 @@ export default async function WorkoutsPage({ searchParams }: PageProps) {
           <h1 className="text-2xl font-bold text-gray-900">Workouts</h1>
           <p className="text-sm text-gray-500 mt-0.5">Team training feed</p>
         </div>
-        <Link href="/dashboard/workouts/new">
+        <Link href="/workouts/new">
           <Button variant="primary">
             <Plus className="w-4 h-4 mr-2" />
             Log Workout
@@ -99,7 +99,7 @@ export default async function WorkoutsPage({ searchParams }: PageProps) {
 
       {/* Week Navigation */}
       <div className="flex items-center gap-3">
-        <Link href={`/dashboard/workouts?week=${prevWeek.toISOString().split('T')[0]}`}>
+        <Link href={`/workouts?week=${prevWeek.toISOString().split('T')[0]}`}>
           <Button variant="ghost" size="sm">← Prev Week</Button>
         </Link>
         <div className="flex-1 text-center">
@@ -109,7 +109,7 @@ export default async function WorkoutsPage({ searchParams }: PageProps) {
           </p>
           <p className="text-xs text-gray-400">{workouts.length} workouts · {totalMiles.toFixed(1)} miles total</p>
         </div>
-        <Link href={`/dashboard/workouts?week=${nextWeek.toISOString().split('T')[0]}`}>
+        <Link href={`/workouts?week=${nextWeek.toISOString().split('T')[0]}`}>
           <Button variant="ghost" size="sm">Next Week →</Button>
         </Link>
       </div>
@@ -120,7 +120,7 @@ export default async function WorkoutsPage({ searchParams }: PageProps) {
             <Activity className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No workouts this week</h3>
             <p className="text-gray-500 mb-6">Log workouts to track team training load.</p>
-            <Link href="/dashboard/workouts/new">
+            <Link href="/workouts/new">
               <Button variant="primary">
                 <Plus className="w-4 h-4 mr-2" />
                 Log First Workout

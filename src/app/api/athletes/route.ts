@@ -175,8 +175,6 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  // Send welcome email
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
   try {
     await sendWelcomeEmail({
       to: email,

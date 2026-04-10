@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Get or create Stripe customer
-  let subscription = await prisma.subscription.findUnique({
+  const subscription = await prisma.subscription.findUnique({
     where: { userId: session.user.id },
   })
 
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
         quantity: 1,
       },
     ],
-    success_url: `${baseUrl}/dashboard/settings?success=true`,
-    cancel_url: `${baseUrl}/dashboard/settings?canceled=true`,
+    success_url: `${baseUrl}/settings?success=true`,
+    cancel_url: `${baseUrl}/settings?canceled=true`,
     metadata: {
       userId: session.user.id,
       plan,

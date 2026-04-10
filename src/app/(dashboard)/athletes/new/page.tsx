@@ -78,7 +78,7 @@ export default function NewAthletePage() {
       if (!res.ok) {
         setError(data.error ?? 'Failed to create athlete')
       } else {
-        router.push(`/dashboard/athletes/${data.athlete!.id}`)
+        router.push(`/athletes/${data.athlete!.id}`)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -90,7 +90,7 @@ export default function NewAthletePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/athletes">
+        <Link href="/athletes">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Roster
@@ -223,7 +223,7 @@ export default function NewAthletePage() {
             )}
 
             <div className="flex gap-3 pt-2">
-              <Link href="/dashboard/athletes">
+              <Link href="/athletes">
                 <Button variant="outline" type="button">
                   Cancel
                 </Button>

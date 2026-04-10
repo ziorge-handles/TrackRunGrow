@@ -84,7 +84,7 @@ function parseCsv(text: string): Record<string, string>[] {
 async function importRaceResults(
   rows: Record<string, string>[],
   teamId: string,
-  userId: string,
+  _userId: string,
 ): Promise<{ imported: number; errors: ImportError[] }> {
   let imported = 0
   const errors: ImportError[] = []
@@ -147,7 +147,7 @@ async function importRaceResults(
 async function importAthletes(
   rows: Record<string, string>[],
   teamId: string,
-  userId: string,
+  _userId: string,
 ): Promise<{ imported: number; errors: ImportError[] }> {
   let imported = 0
   const errors: ImportError[] = []

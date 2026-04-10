@@ -75,10 +75,10 @@ export const CALENDAR_EVENT_LABELS: Record<CalendarEventType, string> = {
 
 export const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },
-  { href: '/dashboard/teams', label: 'Teams', icon: 'Users' },
-  { href: '/dashboard/athletes', label: 'Athletes', icon: 'User' },
-  { href: '/dashboard/races', label: 'Races', icon: 'Trophy' },
-  { href: '/dashboard/workouts', label: 'Workouts', icon: 'Activity' },
-  { href: '/dashboard/calendar', label: 'Calendar', icon: 'Calendar' },
-  { href: '/dashboard/settings', label: 'Settings', icon: 'Settings' },
+  { href: '/teams', label: 'Teams', icon: 'Users' },
+  { href: '/athletes', label: 'Athletes', icon: 'User' },
+  { href: '/races', label: 'Races', icon: 'Trophy' },
+  { href: '/workouts', label: 'Workouts', icon: 'Activity' },
+  { href: '/calendar', label: 'Calendar', icon: 'Calendar' },
+  { href: '/settings', label: 'Settings', icon: 'Settings' },
 ] as const

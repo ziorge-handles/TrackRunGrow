@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Toaster } from 'sonner'
 import { SportProvider } from '@/lib/sport-context'
+import { ThemeProvider } from '@/lib/theme-context'
 import CookieConsent from '@/components/ui/CookieConsent'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -22,11 +23,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <SportProvider>
-          {children}
-          <Toaster position="top-right" richColors closeButton />
-          <CookieConsent />
-        </SportProvider>
+        <ThemeProvider>
+          <SportProvider>
+            {children}
+            <Toaster position="top-right" richColors closeButton />
+            <CookieConsent />
+          </SportProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>
   )

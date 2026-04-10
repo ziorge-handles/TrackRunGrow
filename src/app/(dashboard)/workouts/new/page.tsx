@@ -131,7 +131,7 @@ export default function NewWorkoutPage() {
       if (!res.ok) {
         setError(data.error ?? 'Failed to log workout')
       } else {
-        router.push('/dashboard/workouts')
+        router.push('/workouts')
       }
     } catch {
       setError('Something went wrong.')
@@ -143,7 +143,7 @@ export default function NewWorkoutPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/workouts">
+        <Link href="/workouts">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
@@ -381,7 +381,7 @@ export default function NewWorkoutPage() {
         )}
 
         <div className="flex gap-3">
-          <Link href="/dashboard/workouts">
+          <Link href="/workouts">
             <Button variant="outline" type="button">Cancel</Button>
           </Link>
           <Button variant="primary" type="submit" disabled={loading}>

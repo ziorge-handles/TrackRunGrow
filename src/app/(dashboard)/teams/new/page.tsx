@@ -45,7 +45,7 @@ export default function NewTeamPage() {
       if (!res.ok) {
         setError(data.error ?? 'Failed to create team')
       } else if (data.team) {
-        router.push(`/dashboard/teams/${data.team.id}`)
+        router.push(`/teams/${data.team.id}`)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -57,7 +57,7 @@ export default function NewTeamPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/teams">
+        <Link href="/teams">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Teams
@@ -196,7 +196,7 @@ export default function NewTeamPage() {
         )}
 
         <div className="flex gap-3">
-          <Link href="/dashboard/teams">
+          <Link href="/teams">
             <Button variant="outline" type="button">Cancel</Button>
           </Link>
           <Button variant="primary" type="submit" disabled={loading}>

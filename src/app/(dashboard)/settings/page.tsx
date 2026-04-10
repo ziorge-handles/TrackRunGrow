@@ -5,16 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { PLANS } from '@/lib/stripe'
 import { PLAN_LIMITS, type PlanKey } from '@/lib/plan-limits'
-import { CheckCircle, CreditCard, User, Crown, AlertTriangle } from 'lucide-react'
+import { CheckCircle, User, Crown, AlertTriangle, Palette } from 'lucide-react'
 import SettingsClient from './SettingsClient'
 import DeleteAccountButton from './DeleteAccountButton'
+import ThemeSettings from './ThemeSettings'
 import { formatDate } from '@/lib/utils'
 
 export default async function SettingsPage() {
   const session = await auth()
   if (!session?.user) redirect('/login')
 
-  const [coach, subscription] = await Promise.all([
+  const [, subscription] = await Promise.all([
     prisma.coach.findUnique({
       where: { userId: session.user.id },
     }),
@@ -33,7 +34,7 @@ export default async function SettingsPage() {
   const planLimits = PLAN_LIMITS[plan as PlanKey]
 
   // Get current usage stats
-  const [teamCount, athleteCount] = await Promise.all([
+  const [teamCount] = await Promise.all([
     prisma.team.count({ where: { ownerId: session.user.id } }),
     prisma.athleteTeam.count({
       where: { team: { ownerId: session.user.id } },
@@ -72,6 +73,19 @@ export default async function SettingsPage() {
               </span>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Appearance */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="w-4 h-4 text-gray-500" />
+            Appearance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ThemeSettings />
         </CardContent>
       </Card>
 

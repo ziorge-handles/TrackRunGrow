@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Upload, FileText, Image, Video, File, Download, Trash2, Search, Grid, List, ChevronDown } from 'lucide-react'
+import { Upload, FileText, Image, Video, File, Download, Search, Grid, List, ChevronDown } from 'lucide-react'
 
 type DocumentType = 'FORM' | 'WAIVER' | 'PHOTO' | 'VIDEO' | 'REPORT' | 'OTHER'
 type ViewMode = 'grid' | 'list'

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { CheckSquare, Plus, CheckCircle, Circle, Users, Tag, ChevronRight, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { CheckSquare, Plus, CheckCircle, Circle, Users, ChevronRight } from 'lucide-react'
 
 interface TrackingListItem {
   id: string

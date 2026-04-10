@@ -184,7 +184,7 @@ export async function sendFeeReminder({
         <td style="padding:12px 16px;border:1px solid #fde68a;color:#92400e">${dueDate}</td>
       </tr>
     </table>
-    <p style="text-align:center;margin-bottom:28px"><a href="${process.env.NEXTAUTH_URL ?? 'https://trackrungrow.com'}/dashboard/fees" class="cta-btn" style="background:#d97706">Pay Now</a></p>
+    <p style="text-align:center;margin-bottom:28px"><a href="${process.env.NEXTAUTH_URL ?? 'https://trackrungrow.com'}/fees" class="cta-btn" style="background:#d97706">Pay Now</a></p>
     <p class="small">If you have already paid or have questions, please contact your coach directly.</p>
   `,
   )
@@ -254,7 +254,7 @@ export async function sendMessageNotification({
     <div style="background:#f8fafc;border-left:4px solid #3b82f6;padding:16px 20px;border-radius:0 8px 8px 0;margin:16px 0 24px">
       <p style="margin:0;color:#374151;font-style:italic">"${subject}"</p>
     </div>
-    <p style="text-align:center;margin-bottom:28px"><a href="${process.env.NEXTAUTH_URL ?? 'https://trackrungrow.com'}/dashboard/messages" class="cta-btn" style="background:#1d4ed8">View Message</a></p>
+    <p style="text-align:center;margin-bottom:28px"><a href="${process.env.NEXTAUTH_URL ?? 'https://trackrungrow.com'}/messages" class="cta-btn" style="background:#1d4ed8">View Message</a></p>
     <p class="small">You're receiving this because you're a member of ${teamName} on TrackRunGrow.</p>
   `,
   )

@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
-import { LogOut, User, Settings } from 'lucide-react'
+import { LogOut, User, Settings, Shield, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import SportToggle from './SportToggle'
+// SportToggle moved to Sidebar only
 
 function getPageTitle(pathname: string): string {
   const segments = pathname.split('/').filter(Boolean)
@@ -36,6 +36,8 @@ export default function Topbar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const title = getPageTitle(pathname)
+  const isAdmin = session?.user?.role === 'ADMIN'
+  const isOnAdminPages = pathname.startsWith('/admin')
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-6 bg-white border-b border-gray-200">
@@ -44,8 +46,6 @@ export default function Topbar() {
 
       {/* Right side */}
       <div className="flex items-center gap-4">
-        <SportToggle />
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
@@ -71,17 +71,35 @@ export default function Topbar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings" className="flex items-center gap-2">
+              <Link href="/settings/profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings" className="flex items-center gap-2">
+              <Link href="/settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 Settings
               </Link>
             </DropdownMenuItem>
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={isOnAdminPages ? '/dashboard' : '/admin'}
+                    className="flex items-center gap-2"
+                  >
+                    {isOnAdminPages ? (
+                      <LayoutDashboard className="h-4 w-4" />
+                    ) : (
+                      <Shield className="h-4 w-4" />
+                    )}
+                    {isOnAdminPages ? 'Dashboard' : 'Admin Panel'}
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"

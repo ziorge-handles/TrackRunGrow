@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { Send, Hash, Users, Loader2 } from 'lucide-react'
 
@@ -32,35 +32,41 @@ export default function MessagesPage() {
 
   // Fetch channels
   useEffect(() => {
+    let cancelled = false
     fetch('/api/chat/channels')
       .then(r => r.json())
       .then(data => {
+        if (cancelled) return
         setChannels(data.channels || [])
-        if (data.channels?.length > 0 && !activeChannel) {
-          setActiveChannel(data.channels[0].id)
+        if (data.channels?.length > 0) {
+          setActiveChannel((prev) => prev ?? data.channels[0].id)
         }
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [])
 
   // Fetch messages + polling
-  const fetchMessages = useCallback(async () => {
-    if (!activeChannel) return
-    try {
-      const res = await fetch(`/api/chat/channels/${activeChannel}/messages`)
-      const data = await res.json()
-      setMessages(data.messages || [])
-    } catch { /* silent */ }
-  }, [activeChannel])
-
   useEffect(() => {
     if (!activeChannel) return
-    fetchMessages()
-    // Poll every 3 seconds
-    pollRef.current = setInterval(fetchMessages, 3000)
-    return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [activeChannel, fetchMessages])
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/chat/channels/${activeChannel}/messages`)
+        const data = await res.json()
+        if (!cancelled) setMessages(data.messages || [])
+      } catch { /* silent */ }
+    }
+
+    load()
+    pollRef.current = setInterval(load, 3000)
+    return () => {
+      cancelled = true
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [activeChannel])
 
   // Auto-scroll
   useEffect(() => {

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Users, Trophy, UserPlus, Crown, User } from 'lucide-react'
+import { ArrowLeft, Users, Trophy, Crown, User } from 'lucide-react'
 import { SPORT_LABELS, SPORT_COLORS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 import InviteCoachModal from './InviteCoachModal'
@@ -74,7 +74,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <Link href="/dashboard/teams">
+          <Link href="/teams">
             <Button variant="ghost" size="sm" className="mt-1">
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -110,7 +110,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                 <Users className="w-4 h-4 text-emerald-600" />
                 Athletes ({team.athletes.length})
               </CardTitle>
-              <Link href={`/dashboard/athletes?teamId=${teamId}`}>
+              <Link href={`/athletes?teamId=${teamId}`}>
                 <Button variant="ghost" size="sm">View All</Button>
               </Link>
             </CardHeader>
@@ -124,7 +124,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                   {team.athletes.map(({ athlete }) => (
                     <Link
                       key={athlete.id}
-                      href={`/dashboard/athletes/${athlete.id}`}
+                      href={`/athletes/${athlete.id}`}
                       className="flex items-center justify-between py-3 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors"
                     >
                       <div className="flex items-center gap-3">
@@ -167,7 +167,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                 <Trophy className="w-4 h-4 text-blue-600" />
                 Recent Races
               </CardTitle>
-              <Link href={`/dashboard/races?teamId=${teamId}`}>
+              <Link href={`/races?teamId=${teamId}`}>
                 <Button variant="ghost" size="sm">View All</Button>
               </Link>
             </CardHeader>
@@ -179,7 +179,7 @@ export default async function TeamDetailPage({ params }: PageProps) {
                   {recentRaces.map((race) => (
                     <Link
                       key={race.id}
-                      href={`/dashboard/races/${race.id}`}
+                      href={`/races/${race.id}`}
                       className="flex items-center justify-between py-3 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition-colors"
                     >
                       <div>

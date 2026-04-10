@@ -306,7 +306,7 @@ export default async function MarketingPage() {
                   ))}
                 </ul>
                 <Link
-                  href="/register"
+                  href={`/register?plan=${plan.name.toLowerCase()}`}
                   className={`mt-8 block text-center py-3 rounded-xl font-semibold transition-all ${plan.highlight ? 'bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg' : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-md shadow-emerald-500/15'}`}
                 >
                   {plan.cta}

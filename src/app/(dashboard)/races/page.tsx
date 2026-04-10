@@ -58,7 +58,7 @@ export default async function RacesPage({ searchParams }: PageProps) {
           <h1 className="text-2xl font-bold text-gray-900">Races</h1>
           <p className="text-sm text-gray-500 mt-0.5">Track and manage race events</p>
         </div>
-        <Link href="/dashboard/races/new">
+        <Link href="/races/new">
           <Button variant="primary">
             <Plus className="w-4 h-4 mr-2" />
             New Race
@@ -71,7 +71,7 @@ export default async function RacesPage({ searchParams }: PageProps) {
         {(['upcoming', 'past'] as const).map((f) => (
           <Link
             key={f}
-            href={`/dashboard/races?filter=${f}`}
+            href={`/races?filter=${f}`}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors capitalize ${
               filter === f
                 ? 'border-emerald-600 text-emerald-700'
@@ -95,7 +95,7 @@ export default async function RacesPage({ searchParams }: PageProps) {
                 ? 'Schedule your next race event.'
                 : 'Past race results will appear here.'}
             </p>
-            <Link href="/dashboard/races/new">
+            <Link href="/races/new">
               <Button variant="primary">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Race
@@ -106,7 +106,7 @@ export default async function RacesPage({ searchParams }: PageProps) {
       ) : (
         <div className="space-y-3">
           {races.map((race) => (
-            <Link key={race.id} href={`/dashboard/races/${race.id}`}>
+            <Link key={race.id} href={`/races/${race.id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4">

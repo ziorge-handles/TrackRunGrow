@@ -73,7 +73,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <Link href="/dashboard/races">
+          <Link href="/races">
             <Button variant="ghost" size="sm" className="mt-1">
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -98,7 +98,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
             </div>
           </div>
         </div>
-        <Link href={`/dashboard/races/${raceId}/results`}>
+        <Link href={`/races/${raceId}/results`}>
           <Button variant="primary">
             <ClipboardList className="w-4 h-4 mr-2" />
             Enter Results

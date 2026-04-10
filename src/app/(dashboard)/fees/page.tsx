@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { DollarSign, Plus, Mail, ChevronRight, CheckCircle, Clock, AlertCircle, XCircle, ChevronDown } from 'lucide-react'
-import { sendFeeReminder } from '@/lib/email'
+import { useState } from 'react'
+import { DollarSign, Plus, Mail, ChevronRight, CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react'
 
 interface Fee {
   id: string

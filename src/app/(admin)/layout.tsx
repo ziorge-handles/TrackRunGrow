@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import Link from 'next/link'
-import { Zap, LayoutDashboard, Users, Star, ArrowLeft } from 'lucide-react'
+import { Zap, LayoutDashboard, Users, Star } from 'lucide-react'
 import AdminLogoutButton from './AdminLogoutButton'
 
 export default async function AdminLayout({
@@ -57,11 +57,11 @@ export default async function AdminLayout({
         </nav>
         <div className="px-4 py-4 border-t border-gray-100 space-y-2">
           <Link
-            href="/"
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            href="/dashboard"
+            className="flex items-center justify-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Site
+            <LayoutDashboard className="w-4 h-4" />
+            Switch to Team View
           </Link>
           <AdminLogoutButton />
         </div>

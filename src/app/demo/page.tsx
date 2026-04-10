@@ -73,15 +73,17 @@ function formatTime(seconds: number): string {
 
 // ─── Hook: localStorage state ──────────────────────────────────────────────────
 
-function useDemoState(): [DemoState, (fn: (prev: DemoState) => DemoState) => void, () => void] {
-  const [state, setState] = useState<DemoState>(DEFAULT_STATE)
+function getInitialDemo(): DemoState {
+  if (typeof window === 'undefined') return DEFAULT_STATE
+  try {
+    const saved = localStorage.getItem('trg-demo')
+    if (saved) return JSON.parse(saved)
+  } catch { /* ignore */ }
+  return DEFAULT_STATE
+}
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('trg-demo')
-      if (saved) setState(JSON.parse(saved))
-    } catch { /* ignore */ }
-  }, [])
+function useDemoState(): [DemoState, (fn: (prev: DemoState) => DemoState) => void, () => void] {
+  const [state, setState] = useState<DemoState>(getInitialDemo)
 
   const update = useCallback((fn: (prev: DemoState) => DemoState) => {
     setState(prev => {

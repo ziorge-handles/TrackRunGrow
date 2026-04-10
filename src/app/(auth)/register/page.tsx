@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 
 const registerSchema = z
   .object({
@@ -35,6 +36,8 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const selectedPlan = searchParams.get('plan')
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -76,7 +79,7 @@ export default function RegisterPage() {
       }
 
       toast.success('Account created! Please sign in.')
-      router.push('/login')
+      router.push(selectedPlan ? `/login?callbackUrl=/settings` : '/login')
     } catch {
       toast.error('An unexpected error occurred. Please try again.')
     } finally {
@@ -91,6 +94,14 @@ export default function RegisterPage() {
         <p className="text-sm text-gray-500 mt-1">
           Sign up as a coach to get started
         </p>
+        {selectedPlan && (
+          <div className="mt-3 flex items-center gap-2">
+            <Badge className="bg-emerald-100 text-emerald-800">
+              {selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} Plan selected
+            </Badge>
+            <span className="text-xs text-gray-400">You&apos;ll choose your subscription after signing in</span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

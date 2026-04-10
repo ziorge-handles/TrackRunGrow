@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 import type { Sport } from '@/generated/prisma/client'
 
 interface SportContextValue {
@@ -11,30 +11,29 @@ interface SportContextValue {
 const SportContext = createContext<SportContextValue | null>(null)
 
 const STORAGE_KEY = 'trackrungrow-sport'
-const DEFAULT_SPORT: Sport = 'XC'
+
+function getInitialSport(): Sport {
+  if (typeof window === 'undefined') return 'XC'
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored === 'XC' || stored === 'TRACK') return stored
+  } catch {
+    // localStorage unavailable
+  }
+  return 'XC'
+}
 
 export function SportProvider({ children }: { children: React.ReactNode }) {
-  const [sport, setSportState] = useState<Sport>(DEFAULT_SPORT)
+  const [sport, setSportState] = useState<Sport>(getInitialSport)
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored === 'XC' || stored === 'TRACK') {
-        setSportState(stored)
-      }
-    } catch {
-      // localStorage unavailable (SSR or private mode)
-    }
-  }, [])
-
-  const setSport = (newSport: Sport) => {
+  const setSport = useCallback((newSport: Sport) => {
     setSportState(newSport)
     try {
       localStorage.setItem(STORAGE_KEY, newSport)
     } catch {
       // ignore
     }
-  }
+  }, [])
 
   return (
     <SportContext.Provider value={{ sport, setSport }}>

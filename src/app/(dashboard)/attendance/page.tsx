@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { CheckCircle, XCircle, Clock, AlertCircle, Users, ChevronDown, RefreshCw } from 'lucide-react'
 
 type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'EXCUSED' | 'LATE'

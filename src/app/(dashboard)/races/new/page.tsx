@@ -66,7 +66,7 @@ export default function NewRacePage() {
       if (!res.ok) {
         setError(data.error ?? 'Failed to create race')
       } else if (data.race) {
-        router.push(`/dashboard/races/${data.race.id}`)
+        router.push(`/races/${data.race.id}`)
       }
     } catch {
       setError('Something went wrong.')
@@ -78,7 +78,7 @@ export default function NewRacePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/dashboard/races">
+        <Link href="/races">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Races
@@ -212,7 +212,7 @@ export default function NewRacePage() {
         )}
 
         <div className="flex gap-3">
-          <Link href="/dashboard/races">
+          <Link href="/races">
             <Button variant="outline" type="button">Cancel</Button>
           </Link>
           <Button variant="primary" type="submit" disabled={loading}>

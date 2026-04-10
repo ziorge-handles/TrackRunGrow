@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import {
   ComposedChart,
   Line,
@@ -45,7 +46,45 @@ interface ChartPoint {
   raceName: string
 }
 
-export function PerformanceTrendChart({ results, eventName, lowerIsBetter, unitLabel }: Props) {
+export function PerformanceTrendChart({ results, lowerIsBetter, unitLabel }: Props) {
+  const chartData = useMemo(() => {
+    if (results.length === 0) return []
+
+    const trendInput = results.map((r) => ({
+      resultValue: r.resultValue,
+      achievedAt: new Date(r.recordedAt),
+    }))
+
+    const { projectedValue } = calculateTrendProjection(trendInput)
+
+    const now = new Date().getTime()
+    const data: ChartPoint[] = results.map((r) => {
+      const date = new Date(r.recordedAt)
+      const daysFromNow = (date.getTime() - now) / (1000 * 60 * 60 * 24)
+      return {
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }),
+        result: r.resultValue,
+        trend: projectedValue(daysFromNow),
+        raceName: r.raceName,
+      }
+    })
+
+    if (results.length >= 2) {
+      data.push({
+        date: new Date(now + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: '2-digit',
+        }),
+        result: undefined,
+        trend: projectedValue(30),
+        raceName: 'Projected',
+      })
+    }
+
+    return data
+  }, [results])
+
   if (results.length === 0) {
     return (
       <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
@@ -54,41 +93,6 @@ export function PerformanceTrendChart({ results, eventName, lowerIsBetter, unitL
     )
   }
 
-  // Calculate trend projection
-  const trendInput = results.map((r) => ({
-    resultValue: r.resultValue,
-    achievedAt: new Date(r.recordedAt),
-  }))
-
-  const { projectedValue } = calculateTrendProjection(trendInput)
-
-  const now = Date.now()
-  const chartData: ChartPoint[] = results.map((r) => {
-    const date = new Date(r.recordedAt)
-    const daysFromNow = (date.getTime() - now) / (1000 * 60 * 60 * 24)
-    return {
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }),
-      result: r.resultValue,
-      trend: projectedValue(daysFromNow),
-      raceName: r.raceName,
-    }
-  })
-
-  // Add future projection point (30 days)
-  if (results.length >= 2) {
-    chartData.push({
-      date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: '2-digit',
-      }),
-      result: undefined,
-      trend: projectedValue(30),
-      raceName: 'Projected',
-    })
-  }
-
-  // Find current PR
   const prValue = lowerIsBetter
     ? Math.min(...results.map((r) => r.resultValue))
     : Math.max(...results.map((r) => r.resultValue))

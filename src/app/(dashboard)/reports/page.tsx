@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ClipboardList, Plus, Calendar, User, ChevronDown, FileText } from 'lucide-react'
+import { useState } from 'react'
+import { ClipboardList, Plus, Calendar, User, FileText } from 'lucide-react'
 
 interface Report {
   id: string

@@ -102,11 +102,7 @@ export default function SecurityPage() {
     }
   }
 
-  async function regenerateCodes() {
-    if (!setupData) return
-    // Re-run setup to get new backup codes — requires re-verification
-    startSetup()
-  }
+  void setupData
 
   function copyCode(code: string, index: number) {
     navigator.clipboard.writeText(code)
@@ -207,7 +203,7 @@ export default function SecurityPage() {
             onClick={() => setStep('verify')}
             className="w-full py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
           >
-            I've scanned the code →
+            I&apos;ve scanned the code &rarr;
           </button>
         </div>
       )}

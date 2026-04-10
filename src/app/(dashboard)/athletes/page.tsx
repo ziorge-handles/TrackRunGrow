@@ -67,7 +67,7 @@ export default async function AthletesPage() {
             {athletes.length} athlete{athletes.length !== 1 ? 's' : ''} across {teams.length} team{teams.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <Link href="/dashboard/athletes/new">
+        <Link href="/athletes/new">
           <Button variant="primary">
             <UserPlus className="w-4 h-4 mr-2" />
             Add Athlete
@@ -83,7 +83,7 @@ export default async function AthletesPage() {
             <p className="text-gray-500 mb-6">
               Add athletes to your teams to start tracking their performance.
             </p>
-            <Link href="/dashboard/athletes/new">
+            <Link href="/athletes/new">
               <Button variant="primary">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add First Athlete
@@ -155,7 +155,7 @@ export default async function AthletesPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/dashboard/athletes/${athlete.id}`}>
+                      <Link href={`/athletes/${athlete.id}`}>
                         <Button variant="ghost" size="sm">View</Button>
                       </Link>
                     </TableCell>

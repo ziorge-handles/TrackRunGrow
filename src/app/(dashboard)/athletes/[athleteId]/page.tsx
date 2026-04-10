@@ -79,7 +79,7 @@ export default async function AthleteProfilePage({ params }: PageProps) {
     prisma.workoutLog.findMany({
       where: {
         athleteId,
-        date: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        date: { gte: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000) },
       },
     }),
   ])
@@ -87,7 +87,7 @@ export default async function AthleteProfilePage({ params }: PageProps) {
   const weeklyMileage = weeklyWorkouts.reduce((s, w) => s + (w.distanceMiles ?? 0), 0)
   const latestMetrics = athlete.bodyMetrics[0]
   const isCoach = session.user.role === 'COACH'
-  const basePath = isCoach ? `/dashboard/athletes/${athleteId}` : `/portal`
+  const basePath = isCoach ? `/athletes/${athleteId}` : `/portal`
 
   const tabs = isCoach
     ? [
@@ -110,7 +110,7 @@ export default async function AthleteProfilePage({ params }: PageProps) {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-start gap-3">
         {isCoach && (
-          <Link href="/dashboard/athletes" className="mt-1 p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors flex-shrink-0">
+          <Link href="/athletes" className="mt-1 p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors flex-shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </Link>
         )}

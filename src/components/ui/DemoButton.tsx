@@ -12,7 +12,7 @@ export default function DemoButton() {
       className="inline-flex items-center justify-center gap-2 bg-white/10 text-white border border-white/20 px-8 py-4 rounded-xl text-base font-semibold hover:bg-white/20 transition-colors backdrop-blur"
     >
       <PlayCircle className="w-4 h-4" />
-      Watch Demo
+      Try Interactive Demo
     </button>
   )
 }

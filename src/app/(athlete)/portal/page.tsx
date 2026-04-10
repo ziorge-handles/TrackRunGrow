@@ -34,7 +34,7 @@ export default async function AthletePortalHome() {
         take: 5,
       },
       workoutLogs: {
-        where: { date: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+        where: { date: { gte: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000) } },
         orderBy: { date: 'desc' },
       },
     },

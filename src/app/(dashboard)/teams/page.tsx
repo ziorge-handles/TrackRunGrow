@@ -44,7 +44,7 @@ export default async function TeamsPage() {
             Manage your coaching teams
           </p>
         </div>
-        <Link href="/dashboard/teams/new">
+        <Link href="/teams/new">
           <Button variant="primary">
             <Plus className="w-4 h-4 mr-2" />
             New Team
@@ -60,7 +60,7 @@ export default async function TeamsPage() {
             <p className="text-gray-500 mb-6">
               Create your first team to start managing athletes and tracking performance.
             </p>
-            <Link href="/dashboard/teams/new">
+            <Link href="/teams/new">
               <Button variant="primary">
                 <Plus className="w-4 h-4 mr-2" />
                 Create First Team
@@ -71,7 +71,7 @@ export default async function TeamsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {teams.map((team) => (
-            <Link key={team.id} href={`/dashboard/teams/${team.id}`}>
+            <Link key={team.id} href={`/teams/${team.id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">

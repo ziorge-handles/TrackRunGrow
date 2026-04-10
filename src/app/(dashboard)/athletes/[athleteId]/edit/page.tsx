@@ -91,7 +91,7 @@ export default function EditAthletePage() {
       if (!res.ok) {
         setError(data.error ?? 'Failed to update athlete')
       } else {
-        router.push(`/dashboard/athletes/${athleteId}`)
+        router.push(`/athletes/${athleteId}`)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -111,7 +111,7 @@ export default function EditAthletePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href={`/dashboard/athletes/${athleteId}`}>
+        <Link href={`/athletes/${athleteId}`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Profile
@@ -235,7 +235,7 @@ export default function EditAthletePage() {
         )}
 
         <div className="flex gap-3">
-          <Link href={`/dashboard/athletes/${athleteId}`}>
+          <Link href={`/athletes/${athleteId}`}>
             <Button variant="outline" type="button">Cancel</Button>
           </Link>
           <Button variant="primary" type="submit" disabled={saving}>
