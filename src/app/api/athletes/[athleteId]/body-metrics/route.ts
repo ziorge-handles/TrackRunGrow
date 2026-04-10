@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { bodyMetricSchema } from '@/lib/validations'
 
 async function verifyAthleteAccess(athleteId: string, userId: string, role: string) {
   if (role === 'ATHLETE') {
@@ -74,17 +75,35 @@ export async function POST(
     notes?: string
   }
 
+  // Validate body metrics
+  const parsed = bodyMetricSchema.safeParse({
+    heightCm: body.heightCm ?? undefined,
+    weightKg: body.weightKg ?? undefined,
+    restingHR: body.restingHR ?? undefined,
+    maxHR: body.maxHR ?? undefined,
+    vo2Max: body.vo2Max ?? undefined,
+    bodyFatPct: body.bodyFatPct ?? undefined,
+    notes: body.notes,
+  })
+
+  if (!parsed.success) {
+    return Response.json(
+      { error: 'Invalid body metric data', details: parsed.error.issues },
+      { status: 400 },
+    )
+  }
+
   const metric = await prisma.bodyMetric.create({
     data: {
       athleteId,
       recordedAt: body.recordedAt ? new Date(body.recordedAt) : new Date(),
-      heightCm: body.heightCm,
-      weightKg: body.weightKg,
-      restingHR: body.restingHR,
-      maxHR: body.maxHR,
-      vo2Max: body.vo2Max,
-      bodyFatPct: body.bodyFatPct,
-      notes: body.notes,
+      heightCm: parsed.data.heightCm ?? undefined,
+      weightKg: parsed.data.weightKg ?? undefined,
+      restingHR: parsed.data.restingHR ?? undefined,
+      maxHR: parsed.data.maxHR ?? undefined,
+      vo2Max: parsed.data.vo2Max ?? undefined,
+      bodyFatPct: parsed.data.bodyFatPct ?? undefined,
+      notes: parsed.data.notes,
     },
   })
 

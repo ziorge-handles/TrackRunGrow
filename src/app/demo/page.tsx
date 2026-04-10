@@ -406,19 +406,54 @@ function ResultsTab({ results, athletes, events, showAdd, setShowAdd, onAdd, onR
   results: DemoResult[]; athletes: DemoAthlete[]; events: string[]; showAdd: boolean;
   setShowAdd: (v: boolean) => void; onAdd: (r: DemoResult) => void; onRemove: (id: string) => void;
 }) {
+  const FIELD_EVENTS = ['High Jump', 'Long Jump', 'Triple Jump', 'Pole Vault', 'Shot Put', 'Discus', 'Javelin']
   const [athleteId, setAthleteId] = useState('')
   const [event, setEvent] = useState(events[0] || '')
   const [minutes, setMinutes] = useState('')
   const [seconds, setSeconds] = useState('')
   const [meet, setMeet] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [fieldUnit, setFieldUnit] = useState<'m' | 'ft'>('m')
+  const [metersVal, setMetersVal] = useState('')
+  const [feetVal, setFeetVal] = useState('')
+  const [inchesVal, setInchesVal] = useState('')
+  const [inputError, setInputError] = useState<string | null>(null)
+
+  const isField = FIELD_EVENTS.some(fe => event.toLowerCase().includes(fe.toLowerCase()))
+
+  function metersToFtIn(m: number): string {
+    const totalIn = m / 0.0254
+    const ft = Math.floor(totalIn / 12)
+    const inches = totalIn % 12
+    return `${ft}'${inches.toFixed(1)}"`
+  }
 
   const handleAdd = () => {
     if (!athleteId || !event) return
-    const time = (parseFloat(minutes || '0') * 60) + parseFloat(seconds || '0')
-    if (time <= 0) return
-    onAdd({ id: generateId(), athleteId, event, time, meet: meet || 'Practice', date })
-    setMinutes(''); setSeconds(''); setMeet(''); setShowAdd(false)
+    setInputError(null)
+
+    let resultValue: number
+
+    if (isField) {
+      if (fieldUnit === 'ft') {
+        const ft = parseFloat(feetVal || '0')
+        const inc = parseFloat(inchesVal || '0')
+        if (inc >= 12) { setInputError('Inches must be less than 12'); return }
+        resultValue = (ft + inc / 12) * 0.3048
+      } else {
+        resultValue = parseFloat(metersVal || '0')
+      }
+      if (resultValue <= 0) { setInputError('Distance must be positive'); return }
+    } else {
+      // Parse time input
+      const timeStr = `${minutes || '0'}:${seconds || '0'}`
+      const totalSecs = (parseFloat(minutes || '0') * 60) + parseFloat(seconds || '0')
+      if (totalSecs <= 0) { setInputError('Time must be positive'); return }
+      resultValue = totalSecs
+    }
+
+    onAdd({ id: generateId(), athleteId, event, time: resultValue, meet: meet || 'Practice', date })
+    setMinutes(''); setSeconds(''); setMeet(''); setMetersVal(''); setFeetVal(''); setInchesVal(''); setShowAdd(false); setInputError(null)
   }
 
   const sorted = [...results].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -458,14 +493,43 @@ function ResultsTab({ results, athletes, events, showAdd, setShowAdd, onAdd, onR
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time (min:sec)</label>
-              <div className="flex gap-1 items-center">
-                <input value={minutes} onChange={e => setMinutes(e.target.value)} placeholder="0" type="number"
-                  className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 text-center" />
-                <span className="text-gray-400">:</span>
-                <input value={seconds} onChange={e => setSeconds(e.target.value)} placeholder="00.00" type="number" step="0.01"
-                  className="w-20 px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 text-center" />
-              </div>
+              {isField ? (
+                <>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Distance</label>
+                  <div className="space-y-2">
+                    <div className="flex bg-gray-100 rounded-md p-0.5 w-fit">
+                      <button type="button" onClick={() => setFieldUnit('m')}
+                        className={`px-2 py-1 text-xs font-medium rounded transition-colors ${fieldUnit === 'm' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500'}`}>Meters</button>
+                      <button type="button" onClick={() => setFieldUnit('ft')}
+                        className={`px-2 py-1 text-xs font-medium rounded transition-colors ${fieldUnit === 'ft' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500'}`}>Ft &amp; In</button>
+                    </div>
+                    {fieldUnit === 'm' ? (
+                      <input value={metersVal} onChange={e => setMetersVal(e.target.value)} placeholder="7.52" type="number" step="0.01"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 font-mono" />
+                    ) : (
+                      <div className="flex gap-1 items-center">
+                        <input value={feetVal} onChange={e => setFeetVal(e.target.value)} placeholder="24" type="number"
+                          className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 text-center font-mono" />
+                        <span className="text-gray-500 font-bold">&apos;</span>
+                        <input value={inchesVal} onChange={e => setInchesVal(e.target.value)} placeholder="6.5" type="number" step="0.5"
+                          className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 text-center font-mono" />
+                        <span className="text-gray-500 font-bold">&quot;</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time (min:sec)</label>
+                  <div className="flex gap-1 items-center">
+                    <input value={minutes} onChange={e => setMinutes(e.target.value)} placeholder="0" type="number"
+                      className="w-16 px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 text-center" />
+                    <span className="text-gray-400">:</span>
+                    <input value={seconds} onChange={e => setSeconds(e.target.value)} placeholder="00.00" type="number" step="0.01"
+                      className="w-20 px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 text-center" />
+                  </div>
+                </>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Meet</label>
@@ -478,6 +542,9 @@ function ResultsTab({ results, athletes, events, showAdd, setShowAdd, onAdd, onR
             <input type="date" value={date} onChange={e => setDate(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900" />
           </div>
+          {inputError && (
+            <p className="text-xs text-red-500">{inputError}</p>
+          )}
           <div className="flex gap-2">
             <button onClick={handleAdd} className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">Save Result</button>
             <button onClick={() => setShowAdd(false)} className="text-gray-500 px-4 py-2 text-sm">Cancel</button>
@@ -498,7 +565,7 @@ function ResultsTab({ results, athletes, events, showAdd, setShowAdd, onAdd, onR
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Athlete</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Event</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Time</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Result</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Meet</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
                 <th className="w-10"></th>
@@ -507,11 +574,16 @@ function ResultsTab({ results, athletes, events, showAdd, setShowAdd, onAdd, onR
             <tbody className="divide-y divide-gray-100">
               {sorted.map(r => {
                 const athlete = athletes.find(a => a.id === r.athleteId)
+                const eventIsField = FIELD_EVENTS.some(fe => r.event.toLowerCase().includes(fe.toLowerCase()))
                 return (
                   <tr key={r.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{athlete?.name ?? 'Unknown'}</td>
                     <td className="px-4 py-3"><span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">{r.event}</span></td>
-                    <td className="px-4 py-3 text-sm font-mono text-gray-900">{formatTime(r.time)}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-gray-900">
+                      {eventIsField
+                        ? `${r.time.toFixed(2)}m (${metersToFtIn(r.time)})`
+                        : formatTime(r.time)}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{r.meet}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">{r.date}</td>
                     <td className="px-4 py-3"><button onClick={() => onRemove(r.id)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button></td>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import PhotoUpload from '@/components/ui/PhotoUpload'
 import { ArrowLeft, Loader2, Save } from 'lucide-react'
 
 interface AthleteData {
@@ -17,6 +18,7 @@ interface AthleteData {
   gender: string | null
   notes: string | null
   dateOfBirth: string | null
+  photoUrl: string | null
   user: {
     id: string
     name: string | null
@@ -43,6 +45,7 @@ export default function EditAthletePage() {
   })
 
   const [athleteName, setAthleteName] = useState('')
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`/api/athletes/${athleteId}`)
@@ -50,6 +53,7 @@ export default function EditAthletePage() {
       .then((data: { athlete: AthleteData }) => {
         const a = data.athlete
         setAthleteName(a.user.name ?? '')
+        setPhotoUrl(a.photoUrl ?? null)
         setForm({
           status: a.status ?? 'ACTIVE',
           jerseyNumber: a.jerseyNumber ?? '',
@@ -123,6 +127,19 @@ export default function EditAthletePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Athlete Photo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PhotoUpload
+              athleteId={athleteId}
+              currentUrl={photoUrl}
+              onUpload={(url) => setPhotoUrl(url)}
+            />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Athlete Details</CardTitle>

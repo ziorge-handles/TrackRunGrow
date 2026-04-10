@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowLeft, Trophy, MapPin, Calendar, ClipboardList } from 'lucide-react'
 import { SPORT_LABELS, SPORT_COLORS } from '@/lib/constants'
 import { formatDate, formatTime } from '@/lib/utils'
+import { metersToFeetInches } from '@/lib/validations'
 
 interface PageProps {
   params: Promise<{ raceId: string }>
@@ -206,9 +207,11 @@ export default async function RaceDetailPage({ params }: PageProps) {
                         </TableCell>
                         <TableCell className="font-mono">
                           {result.dnf ? 'DNF' : result.dns ? 'DNS' : result.dq ? 'DQ' :
-                            result.trackEvent?.lowerIsBetter
-                              ? formatTime(result.resultValue)
-                              : `${result.resultValue}${result.trackEvent?.unitLabel ?? ''}`
+                            result.trackEvent?.isFieldEvent
+                              ? `${result.resultValue.toFixed(2)}m (${metersToFeetInches(result.resultValue)})`
+                              : result.trackEvent?.lowerIsBetter
+                                ? formatTime(result.resultValue)
+                                : `${result.resultValue}${result.trackEvent?.unitLabel ?? ''}`
                           }
                         </TableCell>
                       </TableRow>

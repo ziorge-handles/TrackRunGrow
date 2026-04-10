@@ -82,6 +82,18 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
+  if (name.length > 100) {
+    return Response.json({ error: 'Team name must not exceed 100 characters' }, { status: 400 })
+  }
+
+  if (!/^\d{4}-\d{4}$/.test(season)) {
+    return Response.json({ error: 'Season must be in YYYY-YYYY format (e.g. 2025-2026)' }, { status: 400 })
+  }
+
+  if (schoolName.length > 200) {
+    return Response.json({ error: 'School name must not exceed 200 characters' }, { status: 400 })
+  }
+
   // Find or create school
   let school = await prisma.school.findFirst({
     where: {
@@ -126,6 +138,15 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    },
+  })
+
+  // Auto-create a General chat channel for the new team
+  await prisma.chatChannel.create({
+    data: {
+      teamId: team.id,
+      name: 'General',
+      isGeneral: true,
     },
   })
 

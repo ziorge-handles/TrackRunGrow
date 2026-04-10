@@ -8,9 +8,14 @@ import { randomBytes, createHash } from 'crypto'
 import { sendVerificationEmail } from '@/lib/email'
 
 const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
+  name: z.string().min(2).max(100, 'Name too long'),
+  email: z.string().email().max(254, 'Email too long'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password too long')
+    .regex(/[a-z]/, 'Must contain a lowercase letter')
+    .regex(/[A-Z]/, 'Must contain an uppercase letter')
+    .regex(/[0-9]/, 'Must contain a number'),
 })
 
 export async function POST(request: Request) {

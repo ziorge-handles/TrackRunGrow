@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
+import { z } from 'zod'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { raceResultSchema } from '@/lib/validations'
 
 async function verifyRaceAccess(raceId: string, userId: string) {
   const coach = await prisma.coach.findUnique({ where: { userId } })
@@ -98,6 +100,15 @@ export async function POST(
 
   if (!body.results || !Array.isArray(body.results)) {
     return Response.json({ error: 'results array is required' }, { status: 400 })
+  }
+
+  const resultsSchema = z.array(raceResultSchema)
+  const parsed = resultsSchema.safeParse(body.results)
+  if (!parsed.success) {
+    return Response.json(
+      { error: 'Invalid result data', details: parsed.error.issues },
+      { status: 400 },
+    )
   }
 
   const saved: string[] = []

@@ -247,11 +247,14 @@ export default function NewWorkoutPage() {
                   id="distanceMiles"
                   type="number"
                   step="0.1"
+                  min={0.1}
+                  max={100}
                   placeholder="6.0"
                   value={form.distanceMiles}
                   onChange={(e) => setForm((f) => ({ ...f, distanceMiles: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Max: 100 mi</p>
               </div>
               <div>
                 <Label htmlFor="durationMin">Duration (min)</Label>
@@ -259,22 +262,28 @@ export default function NewWorkoutPage() {
                   id="durationMin"
                   type="number"
                   step="0.5"
+                  min={1}
+                  max={600}
                   placeholder="45"
                   value={form.durationMin}
                   onChange={(e) => setForm((f) => ({ ...f, durationMin: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Max: 600 min (10h)</p>
               </div>
               <div>
                 <Label htmlFor="avgHR">Avg HR (bpm)</Label>
                 <Input
                   id="avgHR"
                   type="number"
+                  min={40}
+                  max={230}
                   placeholder="145"
                   value={form.avgHR}
                   onChange={(e) => setForm((f) => ({ ...f, avgHR: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Range: 40-230</p>
               </div>
               <div>
                 <Label htmlFor="perceivedEffort">RPE (1-10)</Label>

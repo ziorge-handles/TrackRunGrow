@@ -95,11 +95,14 @@ export default function AddMetricModal({ athleteId }: Props) {
                   id="weightKg"
                   type="number"
                   step="0.1"
+                  min={20}
+                  max={250}
                   placeholder="e.g. 65.5"
                   value={form.weightKg}
                   onChange={(e) => setForm((f) => ({ ...f, weightKg: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Range: 20-250 kg</p>
               </div>
               <div>
                 <Label htmlFor="heightCm">Height (cm)</Label>
@@ -107,22 +110,28 @@ export default function AddMetricModal({ athleteId }: Props) {
                   id="heightCm"
                   type="number"
                   step="0.5"
+                  min={50}
+                  max={250}
                   placeholder="e.g. 175"
                   value={form.heightCm}
                   onChange={(e) => setForm((f) => ({ ...f, heightCm: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Range: 50-250 cm</p>
               </div>
               <div>
                 <Label htmlFor="restingHR">Resting HR (bpm)</Label>
                 <Input
                   id="restingHR"
                   type="number"
+                  min={25}
+                  max={150}
                   placeholder="e.g. 52"
                   value={form.restingHR}
                   onChange={(e) => setForm((f) => ({ ...f, restingHR: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Range: 25-150 bpm</p>
               </div>
               <div>
                 <Label htmlFor="vo2Max">VO2 Max</Label>
@@ -130,11 +139,14 @@ export default function AddMetricModal({ athleteId }: Props) {
                   id="vo2Max"
                   type="number"
                   step="0.1"
+                  min={10}
+                  max={95}
                   placeholder="e.g. 55.2"
                   value={form.vo2Max}
                   onChange={(e) => setForm((f) => ({ ...f, vo2Max: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Range: 10-95</p>
               </div>
               <div>
                 <Label htmlFor="bodyFatPct">Body Fat %</Label>
@@ -142,22 +154,28 @@ export default function AddMetricModal({ athleteId }: Props) {
                   id="bodyFatPct"
                   type="number"
                   step="0.1"
+                  min={2}
+                  max={60}
                   placeholder="e.g. 12.5"
                   value={form.bodyFatPct}
                   onChange={(e) => setForm((f) => ({ ...f, bodyFatPct: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Range: 2-60%</p>
               </div>
               <div>
                 <Label htmlFor="maxHR">Max HR (bpm)</Label>
                 <Input
                   id="maxHR"
                   type="number"
+                  min={80}
+                  max={230}
                   placeholder="e.g. 195"
                   value={form.maxHR}
                   onChange={(e) => setForm((f) => ({ ...f, maxHR: e.target.value }))}
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-0.5">Range: 80-230 bpm</p>
               </div>
             </div>
 

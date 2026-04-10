@@ -89,6 +89,22 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'name, sport, and date are required' }, { status: 400 })
   }
 
+  if (name.length > 100) {
+    return Response.json({ error: 'Race name must not exceed 100 characters' }, { status: 400 })
+  }
+
+  if (location && location.length > 200) {
+    return Response.json({ error: 'Location must not exceed 200 characters' }, { status: 400 })
+  }
+
+  if (courseDescription && courseDescription.length > 2000) {
+    return Response.json({ error: 'Course description must not exceed 2000 characters' }, { status: 400 })
+  }
+
+  if (notes && notes.length > 1000) {
+    return Response.json({ error: 'Notes must not exceed 1000 characters' }, { status: 400 })
+  }
+
   const parsedDate = parseDate(date)
   if (!parsedDate) {
     return Response.json({ error: 'Invalid date format' }, { status: 400 })

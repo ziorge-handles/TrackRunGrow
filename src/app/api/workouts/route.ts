@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { workoutSchema } from '@/lib/validations'
 import type { WorkoutType } from '@/generated/prisma/client'
 
 export async function GET(request: NextRequest) {
@@ -110,6 +111,24 @@ export async function POST(request: NextRequest) {
 
   if (!date || !type || !title) {
     return Response.json({ error: 'date, type, and title are required' }, { status: 400 })
+  }
+
+  if (title.length > 200) {
+    return Response.json({ error: 'Title must not exceed 200 characters' }, { status: 400 })
+  }
+
+  // Validate numeric workout fields
+  const workoutParsed = workoutSchema.safeParse({
+    distanceMiles: body.distanceMiles ?? undefined,
+    durationMin: body.durationMin ?? undefined,
+    avgHR: body.avgHR ?? undefined,
+    perceivedEffort: body.perceivedEffort ?? undefined,
+  })
+  if (!workoutParsed.success) {
+    return Response.json(
+      { error: 'Invalid workout data', details: workoutParsed.error.issues },
+      { status: 400 },
+    )
   }
 
   // Verify all athletes are accessible

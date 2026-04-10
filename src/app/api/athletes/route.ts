@@ -96,6 +96,22 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'name, email, and teamId are required' }, { status: 400 })
   }
 
+  if (name.length > 100) {
+    return Response.json({ error: 'Name must not exceed 100 characters' }, { status: 400 })
+  }
+
+  if (email.length > 254) {
+    return Response.json({ error: 'Email must not exceed 254 characters' }, { status: 400 })
+  }
+
+  if (jerseyNumber && jerseyNumber.length > 10) {
+    return Response.json({ error: 'Jersey number must not exceed 10 characters' }, { status: 400 })
+  }
+
+  if (jerseyNumber && !/^[A-Za-z0-9]*$/.test(jerseyNumber)) {
+    return Response.json({ error: 'Jersey number can only contain letters and numbers' }, { status: 400 })
+  }
+
   // Plan enforcement: check athlete limit
   const athleteCheck = await checkAthleteLimit(session.user.id, teamId)
   if (!athleteCheck.allowed) {

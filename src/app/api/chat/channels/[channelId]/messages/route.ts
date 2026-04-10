@@ -52,7 +52,11 @@ export async function GET(request: Request, { params }: Params): Promise<NextRes
   const senderMap = Object.fromEntries(senders.map((s) => [s.id, s]))
 
   const enriched = messages
-    .map((m) => ({ ...m, sender: senderMap[m.senderId] ?? null }))
+    .map((m) => ({
+      ...m,
+      sender: senderMap[m.senderId] ?? null,
+      senderName: senderMap[m.senderId]?.name || 'Unknown',
+    }))
     .reverse() // newest-last
 
   return NextResponse.json({

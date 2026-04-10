@@ -13,9 +13,14 @@ import { Label } from '@/components/ui/label'
 
 const registerSchema = z
   .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
+    email: z.string().email('Please enter a valid email address').max(254, 'Email too long'),
+    password: z.string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(128, 'Password too long')
+      .regex(/[a-z]/, 'Must contain a lowercase letter')
+      .regex(/[A-Z]/, 'Must contain an uppercase letter')
+      .regex(/[0-9]/, 'Must contain a number'),
     confirmPassword: z.string(),
     acceptTerms: z.literal(true, {
       message: 'You must agree to the Terms of Service and Privacy Policy',
@@ -35,10 +40,19 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   })
+
+  const password = watch('password') || ''
+  const passwordChecks = [
+    { label: '8+ characters', met: password.length >= 8 },
+    { label: 'Lowercase letter', met: /[a-z]/.test(password) },
+    { label: 'Uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'Number', met: /[0-9]/.test(password) },
+  ]
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
@@ -119,6 +133,32 @@ export default function RegisterPage() {
           />
           {errors.password && (
             <p className="text-xs text-red-600">{errors.password.message}</p>
+          )}
+          {password.length > 0 && (
+            <div className="space-y-1.5 mt-2">
+              <div className="flex gap-1">
+                {passwordChecks.map((check) => (
+                  <div
+                    key={check.label}
+                    className={`h-1 flex-1 rounded-full transition-colors ${
+                      check.met ? 'bg-emerald-500' : 'bg-gray-200'
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                {passwordChecks.map((check) => (
+                  <p
+                    key={check.label}
+                    className={`text-xs flex items-center gap-1 ${
+                      check.met ? 'text-emerald-600' : 'text-gray-400'
+                    }`}
+                  >
+                    {check.met ? '\u2713' : '\u2022'} {check.label}
+                  </p>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
