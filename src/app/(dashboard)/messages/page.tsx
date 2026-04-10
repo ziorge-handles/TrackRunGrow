@@ -83,7 +83,9 @@ export default function MessagesPage() {
         body: JSON.stringify({ body: newMessage.trim() }),
       })
       setNewMessage('')
-      await fetchMessages()
+      const res = await fetch(`/api/chat/channels/${activeChannel}/messages`)
+      const data = await res.json()
+      setMessages(data.messages || [])
     } catch { /* */ }
     setSending(false)
   }
