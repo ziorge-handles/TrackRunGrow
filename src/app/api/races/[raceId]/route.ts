@@ -9,22 +9,40 @@ async function verifyRaceAccess(raceId: string, userId: string) {
   const race = await prisma.race.findUnique({ where: { id: raceId } })
   if (!race) return null
 
-  if (!race.teamId) {
-    // Unattached race — only allow creator (via results or general access)
-    return race
+  if (race.teamId) {
+    // Race belongs to a team — verify user has access to that team
+    const team = await prisma.team.findFirst({
+      where: {
+        id: race.teamId,
+        OR: [
+          { ownerId: userId },
+          { coaches: { some: { coachId: coach.id } } },
+        ],
+      },
+    })
+    return team ? race : null
   }
 
-  const team = await prisma.team.findFirst({
+  // Unattached race — allow access only if the user's teams have athletes with results in this race
+  const accessibleTeams = await prisma.team.findMany({
     where: {
-      id: race.teamId,
       OR: [
         { ownerId: userId },
         { coaches: { some: { coachId: coach.id } } },
       ],
     },
+    select: { id: true },
+  })
+  const teamIds = accessibleTeams.map((t) => t.id)
+
+  const resultFromAccessibleAthlete = await prisma.raceResult.findFirst({
+    where: {
+      raceId,
+      athlete: { teams: { some: { teamId: { in: teamIds } } } },
+    },
   })
 
-  return team ? race : null
+  return resultFromAccessibleAthlete ? race : null
 }
 
 export async function GET(
@@ -37,6 +55,9 @@ export async function GET(
   }
 
   const { raceId } = await params
+
+  const accessCheck = await verifyRaceAccess(raceId, session.user.id)
+  if (!accessCheck) return Response.json({ error: 'Not found or forbidden' }, { status: 404 })
 
   const race = await prisma.race.findUnique({
     where: { id: raceId },
@@ -51,7 +72,7 @@ export async function GET(
     },
   })
 
-  if (!race) return Response.json({ error: 'Race not found' }, { status: 404 })
+  if (!race) return Response.json({ error: 'Not found or forbidden' }, { status: 404 })
 
   return Response.json({ race })
 }

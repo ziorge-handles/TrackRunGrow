@@ -1,6 +1,30 @@
 import { TOTP, Secret } from 'otpauth'
 import bcrypt from 'bcryptjs'
-import { randomBytes } from 'crypto'
+import { randomBytes, createCipheriv, createDecipheriv, scryptSync } from 'crypto'
+
+const ENCRYPTION_KEY = process.env.AUTH_SECRET || 'fallback-dev-key-change-in-production'
+
+export function encryptSecret(plaintext: string): string {
+  const key = scryptSync(ENCRYPTION_KEY, 'trackrungrow-mfa-salt', 32)
+  const iv = randomBytes(16)
+  const cipher = createCipheriv('aes-256-gcm', key, iv)
+  let encrypted = cipher.update(plaintext, 'utf8', 'hex')
+  encrypted += cipher.final('hex')
+  const authTag = cipher.getAuthTag().toString('hex')
+  return `${iv.toString('hex')}:${authTag}:${encrypted}`
+}
+
+export function decryptSecret(encryptedData: string): string {
+  const key = scryptSync(ENCRYPTION_KEY, 'trackrungrow-mfa-salt', 32)
+  const [ivHex, authTagHex, encrypted] = encryptedData.split(':')
+  const iv = Buffer.from(ivHex, 'hex')
+  const authTag = Buffer.from(authTagHex, 'hex')
+  const decipher = createDecipheriv('aes-256-gcm', key, iv)
+  decipher.setAuthTag(authTag)
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8')
+  decrypted += decipher.final('utf8')
+  return decrypted
+}
 
 const APP_NAME = 'TrackRunGrow'
 
@@ -41,14 +65,9 @@ export function verifyTotpToken(secret: string, token: string): boolean {
 
 export function generateBackupCodes(): string[] {
   const codes: string[] = []
-  for (let i = 0; i < 8; i++) {
-    // 8 random alphanumeric characters (uppercase)
-    const code = randomBytes(6)
-      .toString('base64')
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .toUpperCase()
-      .slice(0, 8)
-      .padEnd(8, '0')
+  for (let i = 0; i < 10; i++) {
+    // 128-bit entropy per code using base64url encoding
+    const code = randomBytes(8).toString('base64url').slice(0, 10)
     codes.push(code)
   }
   return codes

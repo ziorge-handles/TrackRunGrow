@@ -79,6 +79,34 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'name, type, and fileUrl are required' }, { status: 400 })
   }
 
+  // Validate URL scheme — only allow https://
+  try {
+    const parsedUrl = new URL(fileUrl)
+    if (parsedUrl.protocol !== 'https:') {
+      return NextResponse.json({ error: 'Only https:// URLs are allowed for file uploads' }, { status: 400 })
+    }
+  } catch {
+    return NextResponse.json({ error: 'Invalid file URL' }, { status: 400 })
+  }
+
+  // Validate MIME type if provided
+  const ALLOWED_MIME_TYPES = [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/csv',
+    'text/plain',
+  ]
+  if (mimeType && !ALLOWED_MIME_TYPES.includes(mimeType)) {
+    return NextResponse.json({ error: `Unsupported file type: ${mimeType}` }, { status: 400 })
+  }
+
   // Verify access
   if (teamId) {
     const team = await prisma.team.findFirst({

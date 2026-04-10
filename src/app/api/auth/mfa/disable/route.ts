@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyTotpToken, verifyBackupCode } from '@/lib/mfa'
+import { verifyTotpToken, verifyBackupCode, decryptSecret } from '@/lib/mfa'
 
 export async function POST(request: Request): Promise<NextResponse> {
   const session = await auth()
@@ -30,8 +30,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'MFA is not enabled' }, { status: 400 })
   }
 
+  // Decrypt the stored secret before verification
+  const decryptedSecret = decryptSecret(user.mfaSecret)
+
   // Verify via TOTP or backup code
-  const totpValid = verifyTotpToken(user.mfaSecret, token)
+  const totpValid = verifyTotpToken(decryptedSecret, token)
   if (!totpValid) {
     const { valid } = await verifyBackupCode(token, user.mfaBackupCodes)
     if (!valid) {

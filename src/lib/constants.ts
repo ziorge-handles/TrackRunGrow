@@ -1,5 +1,7 @@
 import type { Sport, WorkoutType, AthleteStatus, CalendarEventType } from '@/generated/prisma/client'
 
+export const BCRYPT_ROUNDS = 12
+
 export const SPORT_COLORS: Record<Sport, string> = {
   XC: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   TRACK: 'bg-blue-100 text-blue-800 border-blue-200',

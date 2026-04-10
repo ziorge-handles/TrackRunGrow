@@ -104,6 +104,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'athleteIds array is required' }, { status: 400 })
   }
 
+  if (athleteIds.length > 50) {
+    return Response.json({ error: 'athleteIds array must not exceed 50 entries' }, { status: 400 })
+  }
+
   if (!date || !type || !title) {
     return Response.json({ error: 'date, type, and title are required' }, { status: 400 })
   }

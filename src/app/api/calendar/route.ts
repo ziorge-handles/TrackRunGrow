@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { parseDate } from '@/lib/utils'
 import type { CalendarEventType, Sport } from '@/generated/prisma/client'
 
 export async function GET(request: NextRequest) {
@@ -93,6 +94,16 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'title, type, and startTime are required' }, { status: 400 })
   }
 
+  const parsedStartTime = parseDate(body.startTime)
+  if (!parsedStartTime) {
+    return Response.json({ error: 'Invalid startTime format' }, { status: 400 })
+  }
+
+  const parsedEndTime = body.endTime ? parseDate(body.endTime) : undefined
+  if (body.endTime && !parsedEndTime) {
+    return Response.json({ error: 'Invalid endTime format' }, { status: 400 })
+  }
+
   if (body.teamId) {
     const team = await prisma.team.findFirst({
       where: {
@@ -113,8 +124,8 @@ export async function POST(request: NextRequest) {
       title: body.title,
       type: body.type,
       sport: body.sport,
-      startTime: new Date(body.startTime),
-      endTime: body.endTime ? new Date(body.endTime) : undefined,
+      startTime: parsedStartTime,
+      endTime: parsedEndTime,
       allDay: body.allDay ?? false,
       location: body.location,
       description: body.description,

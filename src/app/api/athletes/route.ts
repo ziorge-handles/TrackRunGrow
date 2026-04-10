@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendWelcomeEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
+import { BCRYPT_ROUNDS } from '@/lib/constants'
 
 export async function GET(request: NextRequest) {
   const session = await auth()
@@ -111,8 +113,8 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     // Create user with temporary password
-    const tempPassword = Math.random().toString(36).slice(-10)
-    const passwordHash = await bcrypt.hash(tempPassword, 10)
+    const tempPassword = randomBytes(16).toString('hex')
+    const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS)
 
     user = await prisma.user.create({
       data: {

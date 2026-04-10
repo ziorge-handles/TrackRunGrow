@@ -54,6 +54,14 @@ export function formatDate(date: Date | string): string {
 }
 
 /**
+ * Safely parse a date string, returning null if invalid.
+ */
+export function parseDate(dateString: string): Date | null {
+  const d = new Date(dateString)
+  return isNaN(d.getTime()) ? null : d
+}
+
+/**
  * Calculate a trend projection using least-squares linear regression.
  * Results sorted by date; returns slope, intercept, and a projection function.
  */

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
+import { BCRYPT_ROUNDS } from '@/lib/constants'
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -11,6 +13,17 @@ const registerSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // Rate limit by IP
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
+    const { success: rateLimitOk } = rateLimit(`register:${ip}`, 5, 60000)
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 },
+      )
+    }
+
     const body = await request.json()
     const result = registerSchema.safeParse(body)
 
@@ -31,7 +44,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const passwordHash = await bcrypt.hash(password, 12)
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
 
     const user = await prisma.user.create({
       data: {

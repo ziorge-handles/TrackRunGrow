@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { parseDate } from '@/lib/utils'
 import type { Sport } from '@/generated/prisma/client'
 
 export async function GET(request: NextRequest) {
@@ -88,6 +89,11 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'name, sport, and date are required' }, { status: 400 })
   }
 
+  const parsedDate = parseDate(date)
+  if (!parsedDate) {
+    return Response.json({ error: 'Invalid date format' }, { status: 400 })
+  }
+
   // Verify team access if provided
   if (teamId) {
     const team = await prisma.team.findFirst({
@@ -106,7 +112,7 @@ export async function POST(request: NextRequest) {
     data: {
       name,
       sport,
-      date: new Date(date),
+      date: parsedDate,
       teamId,
       location,
       isHome: isHome ?? false,
@@ -124,7 +130,7 @@ export async function POST(request: NextRequest) {
         title: name,
         type: 'RACE',
         sport,
-        startTime: new Date(date),
+        startTime: parsedDate,
         location,
         raceId: race.id,
       },

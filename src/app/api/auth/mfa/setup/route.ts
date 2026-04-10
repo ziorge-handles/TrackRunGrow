@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { generateTotpSecret, verifyTotpToken, generateBackupCodes, hashBackupCode } from '@/lib/mfa'
+import { generateTotpSecret, verifyTotpToken, generateBackupCodes, hashBackupCode, encryptSecret } from '@/lib/mfa'
 import QRCode from 'qrcode'
 
 export async function GET(): Promise<NextResponse> {
@@ -52,11 +52,14 @@ export async function POST(request: Request): Promise<NextResponse> {
   const plainCodes = generateBackupCodes()
   const hashedCodes = await Promise.all(plainCodes.map(hashBackupCode))
 
+  // Encrypt secret before storing
+  const encryptedSecret = encryptSecret(secret)
+
   // Save to DB
   await prisma.user.update({
     where: { id: session.user.id },
     data: {
-      mfaSecret: secret,
+      mfaSecret: encryptedSecret,
       mfaEnabled: true,
       mfaBackupCodes: hashedCodes,
     },

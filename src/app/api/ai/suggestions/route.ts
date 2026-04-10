@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  if (!athlete) return Response.json({ error: 'Athlete not found' }, { status: 404 })
+  if (!athlete) return Response.json({ error: 'Not found' }, { status: 404 })
 
   const teamIds = athlete.teams.map((at) => at.teamId)
   const hasAccess = await prisma.team.findFirst({
