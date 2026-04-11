@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma'
 import type { Role } from '@/generated/prisma/client'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Required on Vercel / reverse proxies unless AUTH_URL matches the public origin exactly.
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   pages: {
