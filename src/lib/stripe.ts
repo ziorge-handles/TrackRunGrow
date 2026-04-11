@@ -80,7 +80,10 @@ export async function getOrLookupPriceId(plan: keyof typeof PLANS): Promise<stri
   })
 
   if (prices.data.length === 0) {
-    throw new Error(`No active price found for product ${planConfig.productId}`)
+    throw new Error(
+      `No active recurring price for product ${planConfig.productId}. ` +
+        `Set STRIPE_${plan}_PRICE_ID for this plan in the environment, or create an active price in Stripe.`,
+    )
   }
   return prices.data[0].id
 }

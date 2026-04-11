@@ -1,6 +1,18 @@
 import { NextRequest } from 'next/server'
+import Stripe from 'stripe'
 import { stripe, PLANS, getOrLookupPriceId } from '@/lib/stripe'
 import { rateLimit } from '@/lib/rate-limit'
+import { getPublicSiteOrigin } from '@/lib/site-url'
+
+export const runtime = 'nodejs'
+
+function logCheckoutError(error: unknown) {
+  if (error instanceof Stripe.errors.StripeError) {
+    console.error('[stripe/public-checkout]', error.type, error.code ?? '', error.message)
+    return
+  }
+  console.error('[stripe/public-checkout]', error)
+}
 
 export async function POST(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -8,6 +20,14 @@ export async function POST(request: NextRequest) {
   const { success: rateLimitOk } = rateLimit(`public-checkout:${ip}`, 10, 60000)
   if (!rateLimitOk) {
     return Response.json({ error: 'Too many requests. Please wait before trying again.' }, { status: 429 })
+  }
+
+  if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+    console.error('[stripe/public-checkout] STRIPE_SECRET_KEY is not set')
+    return Response.json(
+      { error: 'Checkout is not configured. Please contact support.' },
+      { status: 503 },
+    )
   }
 
   const body = await request.json() as { plan: string; email?: string }
@@ -20,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const priceId = await getOrLookupPriceId(planKey)
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+    const baseUrl = getPublicSiteOrigin()
 
     const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       mode: 'subscription',
@@ -38,7 +58,7 @@ export async function POST(request: NextRequest) {
     const checkoutSession = await stripe.checkout.sessions.create(sessionParams)
     return Response.json({ url: checkoutSession.url })
   } catch (error) {
-    console.error('Stripe public checkout error:', error)
+    logCheckoutError(error)
     return Response.json({ error: 'Failed to create checkout session' }, { status: 500 })
   }
 }
