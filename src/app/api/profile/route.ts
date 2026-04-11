@@ -13,7 +13,7 @@ export async function GET() {
     }),
     prisma.coach.findUnique({
       where: { userId: session.user.id },
-      select: { phoneNumber: true, bio: true },
+      select: { phoneNumber: true, bio: true, customAccentColor: true, customLogoUrl: true },
     }),
   ])
 
@@ -23,6 +23,8 @@ export async function GET() {
     image: user?.image ?? '',
     phone: coach?.phoneNumber ?? '',
     bio: coach?.bio ?? '',
+    customAccentColor: coach?.customAccentColor ?? '',
+    customLogoUrl: coach?.customLogoUrl ?? '',
   })
 }
 
@@ -31,9 +33,11 @@ export async function PATCH(request: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name, phone, bio } = body as { name?: string; phone?: string; bio?: string }
+  const { name, phone, bio, customAccentColor, customLogoUrl } = body as {
+    name?: string; phone?: string; bio?: string;
+    customAccentColor?: string; customLogoUrl?: string
+  }
 
-  // Update user name
   if (name !== undefined) {
     await prisma.user.update({
       where: { id: session.user.id },
@@ -41,11 +45,12 @@ export async function PATCH(request: NextRequest) {
     })
   }
 
-  // Update or create coach profile
-  if (phone !== undefined || bio !== undefined) {
+  if (phone !== undefined || bio !== undefined || customAccentColor !== undefined || customLogoUrl !== undefined) {
     const updateData: Record<string, string> = {}
     if (phone !== undefined) updateData.phoneNumber = phone
     if (bio !== undefined) updateData.bio = bio
+    if (customAccentColor !== undefined) updateData.customAccentColor = customAccentColor
+    if (customLogoUrl !== undefined) updateData.customLogoUrl = customLogoUrl
 
     await prisma.coach.upsert({
       where: { userId: session.user.id },

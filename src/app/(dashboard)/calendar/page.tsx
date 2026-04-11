@@ -86,10 +86,11 @@ export default function CalendarPage() {
   }))
 
   const handleDateClick = (arg: DateClickArg) => {
+    const dateStr = arg.dateStr.includes('T') ? arg.dateStr.slice(0, 10) : arg.dateStr
     setCreateForm((f) => ({
       ...f,
-      startTime: arg.dateStr + (arg.allDay ? '' : 'T08:00'),
-      endTime: arg.dateStr + (arg.allDay ? '' : 'T09:00'),
+      startTime: dateStr + 'T08:00',
+      endTime: dateStr + 'T09:00',
       allDay: arg.allDay,
     }))
     setCreateOpen(true)
@@ -216,7 +217,7 @@ export default function CalendarPage() {
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <Label htmlFor="cal-title">Title</Label>
+              <Label htmlFor="cal-title" className="dark:text-gray-200">Title</Label>
               <Input
                 id="cal-title"
                 placeholder="Event title"
@@ -228,7 +229,7 @@ export default function CalendarPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Type</Label>
+                <Label className="dark:text-gray-200">Type</Label>
                 <Select
                   value={createForm.type}
                   onValueChange={(v) => setCreateForm((f) => ({ ...f, type: v as typeof f.type }))}
@@ -244,7 +245,7 @@ export default function CalendarPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="cal-location">Location</Label>
+                <Label htmlFor="cal-location" className="dark:text-gray-200">Location</Label>
                 <Input
                   id="cal-location"
                   placeholder="optional"
@@ -256,7 +257,7 @@ export default function CalendarPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="cal-start">Start</Label>
+                <Label htmlFor="cal-start" className="dark:text-gray-200">Start</Label>
                 <Input
                   id="cal-start"
                   type="datetime-local"
@@ -267,7 +268,7 @@ export default function CalendarPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="cal-end">End</Label>
+                <Label htmlFor="cal-end" className="dark:text-gray-200">End</Label>
                 <Input
                   id="cal-end"
                   type="datetime-local"
@@ -302,19 +303,19 @@ export default function CalendarPage() {
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: CALENDAR_EVENT_COLORS[selectedEvent.type as keyof typeof CALENDAR_EVENT_COLORS] ?? '#6b7280' }}
                 />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   {CALENDAR_EVENT_LABELS[selectedEvent.type as keyof typeof CALENDAR_EVENT_LABELS] ?? selectedEvent.type}
                 </span>
               </div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-200">
                 {new Date(selectedEvent.startTime).toLocaleString()}
                 {selectedEvent.endTime && ` — ${new Date(selectedEvent.endTime).toLocaleString()}`}
               </p>
               {selectedEvent.location && (
-                <p className="text-sm text-gray-500">{selectedEvent.location}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{selectedEvent.location}</p>
               )}
               {selectedEvent.description && (
-                <p className="text-sm text-gray-600">{selectedEvent.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{selectedEvent.description}</p>
               )}
               <div className="flex gap-3 pt-2">
                 <Button

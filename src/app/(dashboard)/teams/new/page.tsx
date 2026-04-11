@@ -19,7 +19,7 @@ export default function NewTeamPage() {
     name: '',
     sport: 'XC' as 'XC' | 'TRACK',
     season: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
-    gender: '' as '' | 'MALE' | 'FEMALE' | 'OTHER',
+    gender: 'COED' as 'COED' | 'MALE' | 'FEMALE' | 'OTHER',
     schoolName: '',
     schoolCity: '',
     schoolState: '',
@@ -36,7 +36,7 @@ export default function NewTeamPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          gender: form.gender || undefined,
+          gender: form.gender === 'COED' ? undefined : form.gender || undefined,
         }),
       })
 
@@ -123,7 +123,7 @@ export default function NewTeamPage() {
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Co-ed / Not specified</SelectItem>
+                    <SelectItem value="COED">Co-ed / Not specified</SelectItem>
                     <SelectItem value="MALE">Boys / Men</SelectItem>
                     <SelectItem value="FEMALE">Girls / Women</SelectItem>
                     <SelectItem value="OTHER">Other</SelectItem>

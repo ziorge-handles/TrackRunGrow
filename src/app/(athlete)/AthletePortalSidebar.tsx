@@ -10,6 +10,8 @@ import {
   Zap,
   User,
   LogOut,
+  Activity,
+  BarChart2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -17,6 +19,8 @@ const navLinks = [
   { href: '/portal', label: 'My Profile', icon: User, exact: true },
   { href: '/portal/races', label: 'My Races', icon: Trophy },
   { href: '/portal/performance', label: 'My Performance', icon: TrendingUp },
+  { href: '/portal/workouts', label: 'My Workouts', icon: Activity },
+  { href: '/portal/metrics', label: 'Body Metrics', icon: BarChart2 },
   { href: '/portal/calendar', label: 'Calendar', icon: Calendar },
 ]
 

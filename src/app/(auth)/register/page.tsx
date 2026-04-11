@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -11,11 +11,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Loader2, CheckCircle, Lock } from 'lucide-react'
 
 const registerSchema = z
   .object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
-    email: z.string().email('Please enter a valid email address').max(254, 'Email too long'),
     password: z.string()
       .min(8, 'Password must be at least 8 characters')
       .max(128, 'Password too long')
@@ -50,8 +50,14 @@ export default function RegisterPage() {
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const selectedPlan = searchParams.get('plan')
+  const sessionId = searchParams.get('session_id')
+  const planFromUrl = searchParams.get('plan')
   const [isLoading, setIsLoading] = useState(false)
+  const [stripeEmail, setStripeEmail] = useState<string | null>(null)
+  const [stripePlan, setStripePlan] = useState<string | null>(planFromUrl)
+  const [loadingSession, setLoadingSession] = useState(!!sessionId)
+
+  const hasPayment = !!sessionId
 
   const {
     register,
@@ -70,29 +76,59 @@ function RegisterForm() {
     { label: 'Number', met: /[0-9]/.test(password) },
   ]
 
+  useEffect(() => {
+    if (!sessionId) return
+    let cancelled = false
+
+    async function fetchSessionInfo() {
+      try {
+        const res = await fetch(`/api/stripe/session-info?session_id=${sessionId}`)
+        const data = await res.json() as { email?: string; plan?: string; error?: string }
+        if (cancelled) return
+
+        if (!res.ok || !data.email) {
+          toast.error(data.error ?? 'Could not verify payment session.')
+          return
+        }
+
+        setStripeEmail(data.email)
+        if (data.plan) setStripePlan(data.plan)
+      } catch {
+        if (!cancelled) toast.error('Failed to verify payment. Please try again.')
+      } finally {
+        if (!cancelled) setLoadingSession(false)
+      }
+    }
+
+    fetchSessionInfo()
+    return () => { cancelled = true }
+  }, [sessionId])
+
   const onSubmit = async (data: RegisterFormData) => {
+    if (!stripeEmail) return
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: data.name,
-          email: data.email,
+          email: stripeEmail,
           password: data.password,
+          stripeSessionId: sessionId,
         }),
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
+      const result = await res.json() as { error?: string }
+      if (!res.ok) {
         toast.error(result.error ?? 'Registration failed')
+        setIsLoading(false)
         return
       }
 
       toast.success('Account created! Please sign in.')
-      router.push(selectedPlan ? `/login?callbackUrl=/settings` : '/login')
+      router.push('/login')
     } catch {
       toast.error('An unexpected error occurred. Please try again.')
     } finally {
@@ -100,24 +136,97 @@ function RegisterForm() {
     }
   }
 
+  if (!hasPayment) {
+    return (
+      <>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Subscription Required</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Please select a plan and complete payment before creating your account.
+          </p>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-amber-800">
+            A subscription is required to use TrackRunGrow. Choose a plan from our pricing page to get started.
+          </p>
+        </div>
+        <Link
+          href="/#pricing"
+          className="block w-full text-center py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+        >
+          View Plans &amp; Pricing
+        </Link>
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-700">
+            Sign in
+          </Link>
+        </p>
+      </>
+    )
+  }
+
+  if (loadingSession) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <p className="text-sm text-gray-500">Verifying your payment...</p>
+      </div>
+    )
+  }
+
+  if (!stripeEmail) {
+    return (
+      <>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Payment Verification Failed</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            We could not verify your payment session. Please try again.
+          </p>
+        </div>
+        <Link
+          href="/#pricing"
+          className="block w-full text-center py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+        >
+          Return to Pricing
+        </Link>
+      </>
+    )
+  }
+
   return (
     <>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Create account</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Complete Your Account</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Sign up as a coach to get started
+          Just a few more details to finish setting up
         </p>
-        {selectedPlan && (
+        {stripePlan && (
           <div className="mt-3 flex items-center gap-2">
             <Badge className="bg-emerald-100 text-emerald-800">
-              {selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} Plan selected
+              <CheckCircle className="w-3 h-3 mr-1" />
+              {stripePlan.charAt(0).toUpperCase() + stripePlan.slice(1).toLowerCase()} Plan — Payment Complete
             </Badge>
-            <span className="text-xs text-gray-400">You&apos;ll choose your subscription after signing in</span>
           </div>
         )}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Email address</Label>
+          <div className="relative">
+            <Input
+              id="email"
+              type="email"
+              value={stripeEmail}
+              readOnly
+              className="bg-gray-50 text-gray-600 pr-10 cursor-not-allowed"
+            />
+            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </div>
+          <p className="text-xs text-gray-400">Verified via Stripe — cannot be changed</p>
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="name">Full name</Label>
           <Input
@@ -129,20 +238,6 @@ function RegisterForm() {
           />
           {errors.name && (
             <p className="text-xs text-red-600">{errors.name.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email address</Label>
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@school.edu"
-            {...register('email')}
-          />
-          {errors.email && (
-            <p className="text-xs text-red-600">{errors.email.message}</p>
           )}
         </div>
 
@@ -230,7 +325,11 @@ function RegisterForm() {
           className="w-full"
           disabled={isLoading}
         >
-          {isLoading ? 'Creating account...' : 'Create account'}
+          {isLoading ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating your account...</>
+          ) : (
+            'Create Account'
+          )}
         </Button>
       </form>
 

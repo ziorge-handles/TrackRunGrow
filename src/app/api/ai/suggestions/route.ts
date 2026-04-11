@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Verify coach can access this athlete
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
-  if (!coach) return Response.json({ error: 'Coach profile not found' }, { status: 404 })
+  let coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
+  if (!coach) coach = await prisma.coach.create({ data: { userId: session.user.id } })
 
   const athlete = await prisma.athlete.findUnique({
     where: { id: athleteId },

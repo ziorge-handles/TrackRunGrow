@@ -169,14 +169,14 @@ export default function Sidebar() {
                         className={cn(
                           'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors min-h-[44px] relative',
                           active
-                            ? 'bg-blue-50 text-blue-700 font-semibold border-l-[3px] border-blue-600 pl-[9px]'
+                            ? 'nav-active font-semibold border-l-[3px] pl-[9px]'
                             : 'text-gray-600 font-medium hover:bg-gray-50 hover:text-gray-900',
                         )}
                       >
                         <Icon
                           className={cn(
                             'w-4 h-4 flex-shrink-0',
-                            active ? 'text-blue-600' : 'text-gray-400',
+                            active ? 'nav-icon' : 'text-gray-400',
                           )}
                         />
                         {link.label}

@@ -1,15 +1,19 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createHash } from 'crypto'
-import { redirect } from 'next/navigation'
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl
-  const token = searchParams.get('token')
-  const email = searchParams.get('email')
+export async function POST(request: NextRequest) {
+  let body: { token?: string; email?: string }
+  try {
+    body = await request.json()
+  } catch {
+    return Response.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
+  const { token, email } = body
 
   if (!token || !email) {
-    redirect('/login?verify_error=missing')
+    return Response.json({ error: 'Missing token or email' }, { status: 400 })
   }
 
   const hashedToken = createHash('sha256').update(token).digest('hex')
@@ -23,21 +27,19 @@ export async function GET(request: NextRequest) {
   })
 
   if (!verificationToken) {
-    redirect('/login?verify_error=invalid')
+    return Response.json({ error: 'Invalid or expired verification link' }, { status: 400 })
   }
 
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user) {
-    redirect('/login?verify_error=invalid')
+    return Response.json({ error: 'User not found' }, { status: 404 })
   }
 
-  // Mark email as verified
   await prisma.user.update({
     where: { id: user.id },
     data: { emailVerified: new Date() },
   })
 
-  // Delete the used verification token
   await prisma.verificationToken.delete({
     where: {
       identifier_token: {
@@ -47,5 +49,5 @@ export async function GET(request: NextRequest) {
     },
   })
 
-  redirect('/login?verified=true')
+  return Response.json({ verified: true })
 }

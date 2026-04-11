@@ -9,8 +9,13 @@ export const PLAN_LIMITS = {
 export type PlanKey = keyof typeof PLAN_LIMITS
 
 export async function getUserPlan(userId: string): Promise<PlanKey> {
-  const sub = await prisma.subscription.findUnique({ where: { userId } })
-  return (sub?.plan as PlanKey) ?? 'BASIC'
+  let sub = await prisma.subscription.findUnique({ where: { userId } })
+  if (!sub) {
+    sub = await prisma.subscription.create({
+      data: { userId, plan: 'BASIC', status: 'ACTIVE' },
+    })
+  }
+  return (sub.plan as PlanKey) ?? 'BASIC'
 }
 
 export async function checkTeamLimit(userId: string): Promise<{ allowed: boolean; current: number; max: number; plan: PlanKey }> {

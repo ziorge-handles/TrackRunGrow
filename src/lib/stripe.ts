@@ -22,6 +22,7 @@ export const PLANS = {
     name: 'Basic',
     price: 500,
     desc: '1 team, up to 25 athletes',
+    productId: 'prod_UJOikMne3gJpG6',
     priceId: process.env.STRIPE_BASIC_PRICE_ID || null,
     features: [
       '1 team',
@@ -36,6 +37,7 @@ export const PLANS = {
     name: 'Pro',
     price: 2900,
     desc: 'Unlimited teams, unlimited athletes',
+    productId: 'prod_UJOig6QDIp9DQ2',
     priceId: process.env.STRIPE_PRO_PRICE_ID || null,
     features: [
       'Unlimited teams',
@@ -54,6 +56,7 @@ export const PLANS = {
     name: 'Enterprise',
     price: 9900,
     desc: 'For large programs and districts',
+    productId: 'prod_UJOimgRsRBmTMd',
     priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || null,
     features: [
       'Everything in Pro',
@@ -64,3 +67,20 @@ export const PLANS = {
     ],
   },
 } as const
+
+export async function getOrLookupPriceId(plan: keyof typeof PLANS): Promise<string> {
+  const planConfig = PLANS[plan]
+  if (planConfig.priceId) return planConfig.priceId
+
+  const prices = await stripe.prices.list({
+    product: planConfig.productId,
+    active: true,
+    limit: 1,
+    type: 'recurring',
+  })
+
+  if (prices.data.length === 0) {
+    throw new Error(`No active price found for product ${planConfig.productId}`)
+  }
+  return prices.data[0].id
+}

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import ReviewForm from '@/components/ui/ReviewForm'
 import DemoButton from '@/components/ui/DemoButton'
+import PricingButton from '@/components/ui/PricingButton'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -115,7 +116,7 @@ export default async function MarketingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div id="top" className="min-h-screen bg-white font-sans">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
@@ -128,21 +129,29 @@ export default async function MarketingPage() {
             <span className="font-bold text-gray-900 text-lg">TrackRunGrow</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+            <a href="#top" className="hover:text-gray-900 transition-colors">Home</a>
             <a href="#features" className="hover:text-gray-900 transition-colors">Features</a>
             <a href="#pricing" className="hover:text-gray-900 transition-colors">Pricing</a>
             <a href="#reviews" className="hover:text-gray-900 transition-colors">Reviews</a>
             <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
-            <Link href="/login" className="hover:text-gray-900 transition-colors">Log In</Link>
           </div>
-          <Link
-            href="/register"
-            className="hidden md:inline-flex items-center gap-1.5 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors"
-          >
-            Start Today <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/login"
+              className="inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Log In
+            </Link>
+            <a
+              href="#pricing"
+              className="inline-flex items-center gap-1.5 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors"
+            >
+              Start Today <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
           <div className="flex md:hidden items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-gray-600">Log In</Link>
-            <Link href="/register" className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">Sign Up</Link>
+            <Link href="/login" className="text-sm font-medium text-gray-600 border border-gray-300 px-3 py-1.5 rounded-lg">Log In</Link>
+            <a href="#pricing" className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold">Start Today</a>
           </div>
         </div>
       </nav>
@@ -165,12 +174,12 @@ export default async function MarketingPage() {
               Track every mile. Grow every athlete. Win every meet.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
-              <Link
-                href="/register"
+              <a
+                href="#pricing"
                 className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg shadow-emerald-500/25"
               >
                 Start Today <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
               <DemoButton />
             </div>
           </div>
@@ -183,7 +192,7 @@ export default async function MarketingPage() {
       </section>
 
       {/* ── Mission Statement ──────────────────────────────────────────────── */}
-      <section id="mission" className="py-16 bg-white">
+      <section id="mission" className="relative z-10 -mt-px py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-8 sm:p-12">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
@@ -305,12 +314,11 @@ export default async function MarketingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={`/register?plan=${plan.name.toLowerCase()}`}
-                  className={`mt-8 block text-center py-3 rounded-xl font-semibold transition-all ${plan.highlight ? 'bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg' : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-md shadow-emerald-500/15'}`}
-                >
-                  {plan.cta}
-                </Link>
+                <PricingButton
+                  plan={plan.name.toLowerCase()}
+                  label={plan.cta}
+                  highlight={plan.highlight}
+                />
               </div>
             ))}
           </div>
@@ -407,6 +415,7 @@ export default async function MarketingPage() {
               <div>
                 <p className="text-white font-semibold text-sm mb-3">Platform</p>
                 <ul className="space-y-2 text-sm">
+                  <li><a href="#top" className="hover:text-white transition-colors">Home</a></li>
                   <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                   <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
                   <li><a href="#reviews" className="hover:text-white transition-colors">Reviews</a></li>

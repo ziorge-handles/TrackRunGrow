@@ -43,21 +43,21 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  try {
   const session = await auth()
 
   if (!session?.user || session.user.role !== 'COACH') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const coach = await prisma.coach.findUnique({
+  let coach = await prisma.coach.findUnique({
     where: { userId: session.user.id },
   })
 
   if (!coach) {
-    return Response.json({ error: 'Coach profile not found' }, { status: 404 })
+    coach = await prisma.coach.create({ data: { userId: session.user.id } })
   }
 
-  // Plan enforcement: check team limit
   const teamCheck = await checkTeamLimit(session.user.id)
   if (!teamCheck.allowed) {
     return Response.json({
@@ -151,4 +151,8 @@ export async function POST(request: NextRequest) {
   })
 
   return Response.json({ team }, { status: 201 })
+  } catch (error) {
+    console.error('Team creation error:', error)
+    return Response.json({ error: 'Failed to create team. Please try again.' }, { status: 500 })
+  }
 }

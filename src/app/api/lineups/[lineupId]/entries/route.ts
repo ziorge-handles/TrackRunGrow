@@ -49,10 +49,19 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     return NextResponse.json({ error: 'Body must be an array of entry objects' }, { status: 400 })
   }
 
-  // Upsert entries — delete existing for each athleteId+trackEventId combo, then recreate
+  const athleteIds = [...new Set(body.map((e) => e.athleteId))]
+  const teamAthletes = await prisma.athleteTeam.findMany({
+    where: { teamId: lineup.teamId, athleteId: { in: athleteIds }, leftAt: null },
+    select: { athleteId: true },
+  })
+  const validIds = new Set(teamAthletes.map((a) => a.athleteId))
+  const validEntries = body.filter((e) => validIds.has(e.athleteId))
+  if (validEntries.length === 0) {
+    return NextResponse.json({ error: 'No valid athletes for this team' }, { status: 400 })
+  }
+
   await prisma.$transaction(async (tx) => {
-    for (const entry of body) {
-      // Remove existing entry for this athlete+event combination
+    for (const entry of validEntries) {
       await tx.lineupEntry.deleteMany({
         where: {
           lineupId,

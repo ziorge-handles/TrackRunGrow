@@ -61,34 +61,42 @@ export async function POST(request: Request): Promise<NextResponse> {
   const { subject, body: msgBody, recipientIds, teamId, sendEmail } = body
   if (!msgBody) return NextResponse.json({ error: 'body is required' }, { status: 400 })
 
-  let finalRecipientIds: string[] = recipientIds ?? []
+  if (!teamId) {
+    return NextResponse.json({ error: 'teamId is required' }, { status: 400 })
+  }
 
-  // If sending to entire team, resolve all team member user IDs
-  if (teamId && (!finalRecipientIds || finalRecipientIds.length === 0)) {
-    const team = await prisma.team.findFirst({
-      where: {
-        id: teamId,
-        OR: [
-          { ownerId: session.user.id },
-          { coaches: { some: { coach: { userId: session.user.id } } } },
-        ],
-      },
-      include: {
-        athletes: { include: { athlete: { include: { user: { select: { id: true } } } } } },
-        coaches: { include: { coach: { include: { user: { select: { id: true } } } } } },
-      },
-    })
-    if (!team) return NextResponse.json({ error: 'Team not found or access denied' }, { status: 403 })
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+      OR: [
+        { ownerId: session.user.id },
+        { coaches: { some: { coach: { userId: session.user.id } } } },
+      ],
+    },
+    include: {
+      athletes: { include: { athlete: { include: { user: { select: { id: true } } } } } },
+      coaches: { include: { coach: { include: { user: { select: { id: true } } } } } },
+    },
+  })
+  if (!team) return NextResponse.json({ error: 'Team not found or access denied' }, { status: 403 })
 
-    const athleteUserIds = team.athletes.map((at) => at.athlete.user.id)
-    const coachUserIds = team.coaches.map((ct) => ct.coach.user.id)
-    finalRecipientIds = [...new Set([...athleteUserIds, ...coachUserIds])].filter(
-      (id) => id !== session.user.id,
-    )
+  const athleteUserIds = team.athletes.map((at) => at.athlete.user.id)
+  const coachUserIds = team.coaches.map((ct) => ct.coach.user.id)
+  const teamMemberIds = new Set([...athleteUserIds, ...coachUserIds])
+
+  let finalRecipientIds: string[]
+
+  if (recipientIds && recipientIds.length > 0) {
+    finalRecipientIds = recipientIds.filter((id) => teamMemberIds.has(id) && id !== session.user.id)
+    if (finalRecipientIds.length === 0) {
+      return NextResponse.json({ error: 'None of the specified recipients are members of this team' }, { status: 400 })
+    }
+  } else {
+    finalRecipientIds = [...teamMemberIds].filter((id) => id !== session.user.id)
   }
 
   if (finalRecipientIds.length === 0) {
-    return NextResponse.json({ error: 'No recipients specified' }, { status: 400 })
+    return NextResponse.json({ error: 'No recipients available' }, { status: 400 })
   }
 
   const message = await prisma.message.create({

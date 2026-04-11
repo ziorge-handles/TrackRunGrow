@@ -68,16 +68,25 @@ export async function POST(request: Request): Promise<NextResponse> {
   })
   if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
 
+  let validAthleteIds: string[] = []
+  if (athleteIds?.length) {
+    const teamAthletes = await prisma.athleteTeam.findMany({
+      where: { teamId, athleteId: { in: athleteIds }, leftAt: null },
+      select: { athleteId: true },
+    })
+    validAthleteIds = teamAthletes.map((a) => a.athleteId)
+  }
+
   const list = await prisma.trackingList.create({
     data: {
       teamId,
       name,
       description: description ?? null,
       createdById: session.user.id,
-      ...(athleteIds?.length
+      ...(validAthleteIds.length
         ? {
             items: {
-              create: athleteIds.map((athleteId) => ({
+              create: validAthleteIds.map((athleteId) => ({
                 athleteId,
                 addedById: session.user.id,
               })),

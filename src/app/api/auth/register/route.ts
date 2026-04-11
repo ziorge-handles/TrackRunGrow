@@ -6,6 +6,8 @@ import { rateLimit } from '@/lib/rate-limit'
 import { BCRYPT_ROUNDS } from '@/lib/constants'
 import { randomBytes, createHash } from 'crypto'
 import { sendVerificationEmail } from '@/lib/email'
+import { stripe } from '@/lib/stripe'
+import type { SubscriptionPlan } from '@/generated/prisma/client'
 
 const registerSchema = z.object({
   name: z.string().min(2).max(100, 'Name too long'),
@@ -16,11 +18,11 @@ const registerSchema = z.object({
     .regex(/[a-z]/, 'Must contain a lowercase letter')
     .regex(/[A-Z]/, 'Must contain an uppercase letter')
     .regex(/[0-9]/, 'Must contain a number'),
+  stripeSessionId: z.string().optional(),
 })
 
 export async function POST(request: Request) {
   try {
-    // Rate limit by IP
     const forwarded = request.headers.get('x-forwarded-for')
     const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
     const { success: rateLimitOk } = rateLimit(`register:${ip}`, 5, 60000)
@@ -41,9 +43,52 @@ export async function POST(request: Request) {
       )
     }
 
-    const { name, email, password } = result.data
+    const { name, email: clientEmail, password, stripeSessionId } = result.data
 
-    const existing = await prisma.user.findUnique({ where: { email } })
+    let resolvedEmail = clientEmail
+    let stripeCustomerId: string | null = null
+    let plan: SubscriptionPlan = 'BASIC'
+    let stripeSubscriptionId: string | null = null
+
+    if (stripeSessionId) {
+      try {
+        const session = await stripe.checkout.sessions.retrieve(stripeSessionId, {
+          expand: ['subscription'],
+        })
+
+        if (session.payment_status !== 'paid' && session.status !== 'complete') {
+          return NextResponse.json(
+            { error: 'Payment not completed. Please complete checkout first.' },
+            { status: 402 },
+          )
+        }
+
+        const stripeEmail = session.customer_details?.email ?? session.customer_email
+        if (stripeEmail) {
+          resolvedEmail = stripeEmail
+        }
+
+        stripeCustomerId = session.customer as string
+        const planMeta = (session.metadata?.plan ?? 'BASIC').toUpperCase()
+        if (['BASIC', 'PRO', 'ENTERPRISE'].includes(planMeta)) {
+          plan = planMeta as SubscriptionPlan
+        }
+        if (session.subscription) {
+          const sub = typeof session.subscription === 'string'
+            ? session.subscription
+            : session.subscription.id
+          stripeSubscriptionId = sub
+        }
+      } catch (e) {
+        console.error('Failed to verify Stripe session:', e)
+        return NextResponse.json(
+          { error: 'Could not verify payment session.' },
+          { status: 400 },
+        )
+      }
+    }
+
+    const existing = await prisma.user.findUnique({ where: { email: resolvedEmail } })
     if (existing) {
       return NextResponse.json(
         { error: 'An account with this email already exists.' },
@@ -56,7 +101,7 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: resolvedEmail,
         passwordHash,
         role: 'COACH',
         coachProfile: {
@@ -65,14 +110,23 @@ export async function POST(request: Request) {
       },
     })
 
-    // Generate email verification token
+    await prisma.subscription.create({
+      data: {
+        userId: user.id,
+        plan,
+        status: stripeCustomerId ? 'ACTIVE' : 'ACTIVE',
+        stripeCustomerId,
+        stripeSubscriptionId,
+      },
+    })
+
     const verifyToken = randomBytes(32).toString('hex')
     const hashedVerifyToken = createHash('sha256').update(verifyToken).digest('hex')
-    const verifyExpires = new Date(Date.now() + 24 * 3600000) // 24 hours
+    const verifyExpires = new Date(Date.now() + 24 * 3600000)
 
     await prisma.verificationToken.create({
       data: {
-        identifier: email,
+        identifier: resolvedEmail,
         token: hashedVerifyToken,
         expires: verifyExpires,
       },
@@ -81,15 +135,15 @@ export async function POST(request: Request) {
     const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
     try {
       await sendVerificationEmail({
-        to: email,
-        verifyUrl: `${baseUrl}/api/auth/verify-email?token=${verifyToken}&email=${email}`,
+        to: resolvedEmail,
+        verifyUrl: `${baseUrl}/verify-email?token=${verifyToken}&email=${resolvedEmail}`,
       })
     } catch (e) {
       console.error('Failed to send verification email:', e)
     }
 
     return NextResponse.json(
-      { message: 'Account created successfully. Please check your email to verify your account.', userId: user.id },
+      { message: 'Account created successfully.', userId: user.id },
       { status: 201 },
     )
   } catch (error) {

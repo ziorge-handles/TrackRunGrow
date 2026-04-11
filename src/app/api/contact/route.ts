@@ -70,11 +70,14 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           personalizations: [
             {
-              to: [{ email: 'ryanmelvin@trackrungrow.com' }],
+              to: [{ email: process.env.CONTACT_FORM_TO_EMAIL || 'ryanmelvin@trackrungrow.com' }],
               subject: `[TrackRunGrow Contact] ${subject}`,
             },
           ],
-          from: { email: 'noreply@trackrungrow.com', name: 'TrackRunGrow Contact Form' },
+          from: {
+            email: (process.env.SENDGRID_FROM_EMAIL || 'noreply@trackrungrow.com').replace(/^.*<|>$/g, '').trim() || 'noreply@trackrungrow.com',
+            name: 'TrackRunGrow Contact Form',
+          },
           reply_to: { email, name },
           content: [
             {

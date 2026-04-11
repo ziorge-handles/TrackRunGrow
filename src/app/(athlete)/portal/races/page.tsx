@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { redirect, notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -11,8 +11,10 @@ export default async function AthletePortalRacesPage() {
   const session = await auth()
   if (!session?.user) redirect('/login')
 
-  const athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id } })
-  if (!athlete) notFound()
+  let athlete = await prisma.athlete.findUnique({ where: { userId: session.user.id } })
+  if (!athlete) {
+    athlete = await prisma.athlete.create({ data: { userId: session.user.id } })
+  }
 
   const results = await prisma.raceResult.findMany({
     where: { athleteId: athlete.id },

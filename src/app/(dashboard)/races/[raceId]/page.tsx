@@ -36,10 +36,11 @@ export default async function RaceDetailPage({ params }: PageProps) {
 
   if (!race) notFound()
 
-  // Verify access
+  // Verify access — always require coach + team membership
+  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
+  if (!coach) notFound()
+
   if (race.teamId) {
-    const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
-    if (!coach) notFound()
     const team = await prisma.team.findFirst({
       where: {
         id: race.teamId,
@@ -47,6 +48,8 @@ export default async function RaceDetailPage({ params }: PageProps) {
       },
     })
     if (!team) notFound()
+  } else {
+    notFound()
   }
 
   // XC team scoring (lowest combined place wins)
@@ -151,7 +154,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
                       <TableCell className="font-bold">{result.place ?? '—'}</TableCell>
                       <TableCell>
                         <Link
-                          href={`/dashboard/athletes/${result.athleteId}`}
+                          href={`/athletes/${result.athleteId}`}
                           className="font-medium text-gray-900 hover:text-emerald-700"
                         >
                           {result.athlete.user.name}
@@ -199,7 +202,7 @@ export default async function RaceDetailPage({ params }: PageProps) {
                         <TableCell className="font-bold">{result.place ?? '—'}</TableCell>
                         <TableCell>
                           <Link
-                            href={`/dashboard/athletes/${result.athleteId}`}
+                            href={`/athletes/${result.athleteId}`}
                             className="font-medium text-gray-900 hover:text-blue-700"
                           >
                             {result.athlete.user.name}

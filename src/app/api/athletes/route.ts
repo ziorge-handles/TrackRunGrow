@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
-  if (!coach) return Response.json({ error: 'Coach profile not found' }, { status: 404 })
+  let coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
+  if (!coach) coach = await prisma.coach.create({ data: { userId: session.user.id } })
 
   const body = await request.json() as {
     name: string

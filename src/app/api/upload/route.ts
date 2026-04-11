@@ -43,8 +43,22 @@ export async function POST(request: NextRequest) {
     const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName)
     const publicUrl = urlData.publicUrl
 
-    // Update athlete photo if athleteId provided
+    // Update athlete photo if athleteId provided — verify access first
     if (athleteId && type === 'photo') {
+      const athleteTeam = await prisma.athleteTeam.findFirst({
+        where: {
+          athleteId,
+          team: {
+            OR: [
+              { ownerId: session.user.id },
+              { coaches: { some: { coach: { userId: session.user.id } } } },
+            ],
+          },
+        },
+      })
+      if (!athleteTeam) {
+        return Response.json({ error: 'Access denied' }, { status: 403 })
+      }
       await prisma.athlete.update({
         where: { id: athleteId },
         data: { photoUrl: publicUrl },

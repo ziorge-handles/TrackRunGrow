@@ -12,27 +12,31 @@ export async function GET(request: Request): Promise<NextResponse> {
   const athleteId = searchParams.get('athleteId')
   const type = searchParams.get('type') as DocumentType | null
 
-  if (!teamId && !athleteId) {
-    return NextResponse.json({ error: 'teamId or athleteId is required' }, { status: 400 })
+  if (!teamId) {
+    return NextResponse.json({ error: 'teamId is required' }, { status: 400 })
   }
 
-  // Verify team access if teamId provided
-  if (teamId) {
-    const team = await prisma.team.findFirst({
-      where: {
-        id: teamId,
-        OR: [
-          { ownerId: session.user.id },
-          { coaches: { some: { coach: { userId: session.user.id } } } },
-        ],
-      },
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+      OR: [
+        { ownerId: session.user.id },
+        { coaches: { some: { coach: { userId: session.user.id } } } },
+      ],
+    },
+  })
+  if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+
+  if (athleteId) {
+    const athleteOnTeam = await prisma.athleteTeam.findFirst({
+      where: { athleteId, teamId },
     })
-    if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    if (!athleteOnTeam) return NextResponse.json({ error: 'Athlete not on this team' }, { status: 403 })
   }
 
   const docs = await prisma.document.findMany({
     where: {
-      ...(teamId ? { teamId } : {}),
+      teamId,
       ...(athleteId ? { athleteId } : {}),
       ...(type ? { type } : {}),
     },
@@ -107,23 +111,31 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: `Unsupported file type: ${mimeType}` }, { status: 400 })
   }
 
-  // Verify access
-  if (teamId) {
-    const team = await prisma.team.findFirst({
-      where: {
-        id: teamId,
-        OR: [
-          { ownerId: session.user.id },
-          { coaches: { some: { coach: { userId: session.user.id } } } },
-        ],
-      },
+  if (!teamId) {
+    return NextResponse.json({ error: 'teamId is required' }, { status: 400 })
+  }
+
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+      OR: [
+        { ownerId: session.user.id },
+        { coaches: { some: { coach: { userId: session.user.id } } } },
+      ],
+    },
+  })
+  if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+
+  if (athleteId) {
+    const athleteOnTeam = await prisma.athleteTeam.findFirst({
+      where: { athleteId, teamId },
     })
-    if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    if (!athleteOnTeam) return NextResponse.json({ error: 'Athlete not on this team' }, { status: 403 })
   }
 
   const doc = await prisma.document.create({
     data: {
-      teamId: teamId ?? null,
+      teamId,
       athleteId: athleteId ?? null,
       uploadedById: session.user.id,
       name,

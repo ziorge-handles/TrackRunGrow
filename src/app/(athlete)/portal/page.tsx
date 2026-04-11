@@ -17,8 +17,13 @@ export default async function AthletePortalHome() {
   const session = await auth()
   if (!session?.user) redirect('/login')
 
+  let athleteBase = await prisma.athlete.findUnique({ where: { userId: session.user.id } })
+  if (!athleteBase) {
+    athleteBase = await prisma.athlete.create({ data: { userId: session.user.id } })
+  }
+
   const athlete = await prisma.athlete.findUnique({
-    where: { userId: session.user.id },
+    where: { id: athleteBase.id },
     include: {
       user: { select: { name: true } },
       teams: {
@@ -77,11 +82,17 @@ export default async function AthletePortalHome() {
           })}
         </p>
         <div className="flex flex-wrap gap-2 mt-3">
-          {athlete.teams.map(({ team }) => (
-            <Badge key={team.id} className="bg-blue-500/40 text-white border-blue-400">
-              {team.name}
+          {athlete.teams.length > 0 ? (
+            athlete.teams.map(({ team }) => (
+              <Badge key={team.id} className="bg-blue-500/40 text-white border-blue-400">
+                {team.name}
+              </Badge>
+            ))
+          ) : (
+            <Badge className="bg-blue-500/20 text-blue-100 border-blue-400/50">
+              Not assigned to a team yet
             </Badge>
-          ))}
+          )}
           <Badge className={`${ATHLETE_STATUS_COLORS[athlete.status]} border`}>
             {ATHLETE_STATUS_LABELS[athlete.status]}
           </Badge>

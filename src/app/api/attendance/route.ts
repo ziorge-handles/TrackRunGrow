@@ -91,8 +91,19 @@ export async function POST(request: Request): Promise<NextResponse> {
   })
   if (!team) return NextResponse.json({ error: 'Access denied' }, { status: 403 })
 
+  const teamAthletes = await prisma.athleteTeam.findMany({
+    where: { teamId, leftAt: null },
+    select: { athleteId: true },
+  })
+  const validAthleteIds = new Set(teamAthletes.map((a) => a.athleteId))
+
+  const validEntries = entries.filter((e) => validAthleteIds.has(e.athleteId))
+  if (validEntries.length === 0) {
+    return NextResponse.json({ error: 'No valid athletes for this team' }, { status: 400 })
+  }
+
   const results = await prisma.$transaction(
-    entries.map((entry) =>
+    validEntries.map((entry) =>
       prisma.eventAttendance.upsert({
         where: { calendarEventId_athleteId: { calendarEventId, athleteId: entry.athleteId } },
         create: {

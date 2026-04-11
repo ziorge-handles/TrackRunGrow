@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { redirect, notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { PerformanceTrendChart } from '@/components/performance/PerformanceTrendChart'
 import { PersonalBestCard } from '@/components/performance/PersonalBestCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,11 +16,13 @@ export default async function AthletePortalPerformancePage({ searchParams }: Pag
 
   const { eventId } = await searchParams
 
-  const athlete = await prisma.athlete.findUnique({
+  let athlete = await prisma.athlete.findUnique({
     where: { userId: session.user.id },
   })
 
-  if (!athlete) notFound()
+  if (!athlete) {
+    athlete = await prisma.athlete.create({ data: { userId: session.user.id } })
+  }
 
   const athleteId = athlete.id
 

@@ -17,12 +17,17 @@ export async function POST() {
     return Response.json({ error: 'No billing account found' }, { status: 404 })
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
 
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: subscription.stripeCustomerId,
-    return_url: `${baseUrl}/settings`,
-  })
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripeCustomerId,
+      return_url: `${baseUrl}/settings`,
+    })
 
-  return Response.json({ url: portalSession.url })
+    return Response.json({ url: portalSession.url })
+  } catch (error) {
+    console.error('Stripe portal error:', error)
+    return Response.json({ error: 'Failed to create billing portal session' }, { status: 500 })
+  }
 }

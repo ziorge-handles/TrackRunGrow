@@ -68,13 +68,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  try {
   const session = await auth()
   if (!session?.user || session.user.role !== 'COACH') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
-  if (!coach) return Response.json({ error: 'Coach profile not found' }, { status: 404 })
+  let coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
+  if (!coach) {
+    coach = await prisma.coach.create({ data: { userId: session.user.id } })
+  }
 
   const body = await request.json() as {
     athleteIds: string[]
@@ -180,4 +183,8 @@ export async function POST(request: NextRequest) {
   }
 
   return Response.json({ workoutLogs: created }, { status: 201 })
+  } catch (error) {
+    console.error('Workout creation error:', error)
+    return Response.json({ error: 'Failed to log workout. Please try again.' }, { status: 500 })
+  }
 }

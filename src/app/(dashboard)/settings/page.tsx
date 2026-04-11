@@ -85,7 +85,7 @@ export default async function SettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ThemeSettings />
+          <ThemeSettings isEnterprise={plan === 'ENTERPRISE'} />
         </CardContent>
       </Card>
 
