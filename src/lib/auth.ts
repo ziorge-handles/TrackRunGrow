@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { Role } from '@/generated/prisma/client'
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const { handlers, auth: authInternal, signIn, signOut } = NextAuth({
   // Required on Vercel / reverse proxies unless AUTH_URL matches the public origin exactly.
   trustHost: true,
   adapter: PrismaAdapter(prisma),
@@ -69,14 +69,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token
     },
     async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role as Role
+      if (!token?.id || !session.user) return session
+
+      session.user.id = token.id as string
+
+      let role = token.role as Role | undefined
+      if (!role) {
+        try {
+          const u = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true },
+          })
+          role = u?.role
+        } catch {
+          // keep undefined; handled below
+        }
       }
+      session.user.role = (role ?? 'ATHLETE') as Role
+
       return session
     },
   },
 })
+
+export { handlers, signIn, signOut }
+
+/**
+ * Server-side session read. Wrapped so JWT / env misconfiguration does not
+ * crash RSC with an opaque production digest — logs the cause and returns null.
+ */
+export async function auth() {
+  try {
+    return await authInternal()
+  } catch (error) {
+    console.error('[auth] Failed to resolve session:', error)
+    return null
+  }
+}
 
 // Augment next-auth types
 declare module 'next-auth' {
