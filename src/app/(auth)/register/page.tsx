@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle, Lock } from 'lucide-react'
+import { Loader2, CheckCircle, Lock, Users } from 'lucide-react'
 
 const registerSchema = z
   .object({
@@ -50,14 +50,24 @@ export default function RegisterPage() {
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const inviteToken = searchParams.get('invite_token')
   const sessionId = searchParams.get('session_id')
   const planFromUrl = searchParams.get('plan')
+
   const [isLoading, setIsLoading] = useState(false)
   const [stripeEmail, setStripeEmail] = useState<string | null>(null)
   const [stripePlan, setStripePlan] = useState<string | null>(planFromUrl)
-  const [loadingSession, setLoadingSession] = useState(!!sessionId)
+  const [loadingSession, setLoadingSession] = useState(!!sessionId && !inviteToken)
 
-  const hasPayment = !!sessionId
+  const [invitePreview, setInvitePreview] = useState<{
+    invitedEmail: string
+    teamName: string
+    teamSchool: string
+  } | null>(null)
+  const [loadingInvite, setLoadingInvite] = useState(!!inviteToken)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+
+  const hasPayment = !!sessionId && !inviteToken
 
   const {
     register,
@@ -77,7 +87,43 @@ function RegisterForm() {
   ]
 
   useEffect(() => {
-    if (!sessionId) return
+    if (!inviteToken) return
+    let cancelled = false
+
+    async function loadInvite() {
+      try {
+        const res = await fetch(`/api/invitations/${inviteToken}`)
+        const data = await res.json() as {
+          invitedEmail?: string
+          teamName?: string
+          teamSchool?: string
+          error?: string
+        }
+        if (cancelled) return
+        if (!res.ok) {
+          setInviteError(data.error ?? 'Invalid or expired invitation.')
+          return
+        }
+        if (data.invitedEmail && data.teamName) {
+          setInvitePreview({
+            invitedEmail: data.invitedEmail,
+            teamName: data.teamName,
+            teamSchool: data.teamSchool ?? '',
+          })
+        }
+      } catch {
+        if (!cancelled) setInviteError('Failed to load invitation.')
+      } finally {
+        if (!cancelled) setLoadingInvite(false)
+      }
+    }
+
+    loadInvite()
+    return () => { cancelled = true }
+  }, [inviteToken])
+
+  useEffect(() => {
+    if (!sessionId || inviteToken) return
     let cancelled = false
 
     async function fetchSessionInfo() {
@@ -102,9 +148,37 @@ function RegisterForm() {
 
     fetchSessionInfo()
     return () => { cancelled = true }
-  }, [sessionId])
+  }, [sessionId, inviteToken])
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmitInvite = async (data: RegisterFormData) => {
+    if (!inviteToken) return
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          password: data.password,
+          inviteToken,
+        }),
+      })
+      const result = await res.json() as { error?: string }
+      if (!res.ok) {
+        toast.error(result.error ?? 'Registration failed')
+        setIsLoading(false)
+        return
+      }
+      toast.success('Account created! Verify your email, then sign in. You are on the team.')
+      router.push('/login')
+    } catch {
+      toast.error('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const onSubmitStripe = async (data: RegisterFormData) => {
     if (!stripeEmail) return
     setIsLoading(true)
 
@@ -136,18 +210,120 @@ function RegisterForm() {
     }
   }
 
+  if (inviteToken) {
+    if (loadingInvite) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+          <p className="text-sm text-gray-500">Loading your invitation...</p>
+        </div>
+      )
+    }
+    if (inviteError || !invitePreview) {
+      return (
+        <>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Invitation unavailable</h2>
+            <p className="text-sm text-gray-500 mt-1">{inviteError ?? 'This link is not valid.'}</p>
+          </div>
+          <Link
+            href="/login"
+            className="block w-full text-center py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+          >
+            Sign in
+          </Link>
+        </>
+      )
+    }
+
+    return (
+      <>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-emerald-700" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Join as coach</h2>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            You were invited to <strong>{invitePreview.teamName}</strong>
+            {invitePreview.teamSchool ? ` (${invitePreview.teamSchool})` : ''}. Create your password to finish.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmitInvite)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email address</Label>
+            <div className="relative">
+              <Input
+                id="email"
+                type="email"
+                value={invitePreview.invitedEmail}
+                readOnly
+                className="bg-gray-50 text-gray-600 pr-10 cursor-not-allowed"
+              />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+            <p className="text-xs text-gray-400">This must match the invited email</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="name">Full name</Label>
+            <Input
+              id="name"
+              type="text"
+              autoComplete="name"
+              placeholder="Coach Jane Smith"
+              {...register('name')}
+            />
+            {errors.name && (
+              <p className="text-xs text-red-600">{errors.name.message}</p>
+            )}
+          </div>
+
+          <PasswordFields
+            register={register}
+            errors={errors}
+            password={password}
+            passwordChecks={passwordChecks}
+          />
+
+          <TermsCheckbox register={register} errors={errors} />
+
+          <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating your account...</>
+            ) : (
+              'Create account & join team'
+            )}
+          </Button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-700">
+            Sign in
+          </Link>
+        </p>
+      </>
+    )
+  }
+
   if (!hasPayment) {
     return (
       <>
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Subscription Required</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Please select a plan and complete payment before creating your account.
+            Please select a plan and complete payment before creating a head coach account.
           </p>
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-amber-800">
-            A subscription is required to use TrackRunGrow. Choose a plan from our pricing page to get started.
+            A subscription is required for new programs. Choose a plan from our pricing page to get started.
+          </p>
+          <p className="text-sm text-amber-900 mt-3">
+            <strong>Invited as an assistant coach?</strong> Use the link in your email — it opens a registration page that does not require payment.
           </p>
         </div>
         <Link
@@ -211,7 +387,7 @@ function RegisterForm() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmitStripe)} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email">Email address</Label>
           <div className="relative">
@@ -241,83 +417,14 @@ function RegisterForm() {
           )}
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Min. 8 characters"
-            {...register('password')}
-          />
-          {errors.password && (
-            <p className="text-xs text-red-600">{errors.password.message}</p>
-          )}
-          {password.length > 0 && (
-            <div className="space-y-1.5 mt-2">
-              <div className="flex gap-1">
-                {passwordChecks.map((check) => (
-                  <div
-                    key={check.label}
-                    className={`h-1 flex-1 rounded-full transition-colors ${
-                      check.met ? 'bg-emerald-500' : 'bg-gray-200'
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                {passwordChecks.map((check) => (
-                  <p
-                    key={check.label}
-                    className={`text-xs flex items-center gap-1 ${
-                      check.met ? 'text-emerald-600' : 'text-gray-400'
-                    }`}
-                  >
-                    {check.met ? '\u2713' : '\u2022'} {check.label}
-                  </p>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <PasswordFields
+          register={register}
+          errors={errors}
+          password={password}
+          passwordChecks={passwordChecks}
+        />
 
-        <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Repeat your password"
-            {...register('confirmPassword')}
-          />
-          {errors.confirmPassword && (
-            <p className="text-xs text-red-600">
-              {errors.confirmPassword.message}
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-start gap-2">
-          <input
-            id="acceptTerms"
-            type="checkbox"
-            {...register('acceptTerms')}
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-          />
-          <label htmlFor="acceptTerms" className="text-sm text-gray-600">
-            I agree to the{' '}
-            <Link href="/terms" className="text-emerald-600 hover:text-emerald-700 underline" target="_blank">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700 underline" target="_blank">
-              Privacy Policy
-            </Link>
-          </label>
-        </div>
-        {errors.acceptTerms && (
-          <p className="text-xs text-red-600">{errors.acceptTerms.message}</p>
-        )}
+        <TermsCheckbox register={register} errors={errors} />
 
         <Button
           type="submit"
@@ -342,6 +449,112 @@ function RegisterForm() {
           Sign in
         </Link>
       </p>
+    </>
+  )
+}
+
+function PasswordFields({
+  register,
+  errors,
+  password,
+  passwordChecks,
+}: {
+  register: ReturnType<typeof useForm<RegisterFormData>>['register']
+  errors: ReturnType<typeof useForm<RegisterFormData>>['formState']['errors']
+  password: string
+  passwordChecks: { label: string; met: boolean }[]
+}) {
+  return (
+    <>
+      <div className="space-y-1.5">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Min. 8 characters"
+          {...register('password')}
+        />
+        {errors.password && (
+          <p className="text-xs text-red-600">{errors.password.message}</p>
+        )}
+        {password.length > 0 && (
+          <div className="space-y-1.5 mt-2">
+            <div className="flex gap-1">
+              {passwordChecks.map((check) => (
+                <div
+                  key={check.label}
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    check.met ? 'bg-emerald-500' : 'bg-gray-200'
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {passwordChecks.map((check) => (
+                <p
+                  key={check.label}
+                  className={`text-xs flex items-center gap-1 ${
+                    check.met ? 'text-emerald-600' : 'text-gray-400'
+                  }`}
+                >
+                  {check.met ? '\u2713' : '\u2022'} {check.label}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="confirmPassword">Confirm password</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Repeat your password"
+          {...register('confirmPassword')}
+        />
+        {errors.confirmPassword && (
+          <p className="text-xs text-red-600">
+            {errors.confirmPassword.message}
+          </p>
+        )}
+      </div>
+    </>
+  )
+}
+
+function TermsCheckbox({
+  register,
+  errors,
+}: {
+  register: ReturnType<typeof useForm<RegisterFormData>>['register']
+  errors: ReturnType<typeof useForm<RegisterFormData>>['formState']['errors']
+}) {
+  return (
+    <>
+      <div className="flex items-start gap-2">
+        <input
+          id="acceptTerms"
+          type="checkbox"
+          {...register('acceptTerms')}
+          className="mt-1 h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+        />
+        <label htmlFor="acceptTerms" className="text-sm text-gray-600">
+          I agree to the{' '}
+          <Link href="/terms" className="text-emerald-600 hover:text-emerald-700 underline" target="_blank">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700 underline" target="_blank">
+            Privacy Policy
+          </Link>
+        </label>
+      </div>
+      {errors.acceptTerms && (
+        <p className="text-xs text-red-600">{errors.acceptTerms.message}</p>
+      )}
     </>
   )
 }

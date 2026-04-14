@@ -23,7 +23,7 @@ const reviewSchema = z.object({
 
 export async function POST(request: Request): Promise<NextResponse> {
   const forwarded = (request.headers.get('x-forwarded-for') ?? '').split(',')[0]?.trim() || 'unknown'
-  const { success: rateLimitOk } = rateLimit(`review:${forwarded}`, 3, 3600000)
+  const { success: rateLimitOk } = await rateLimit(`review:${forwarded}`, 3, 3600000)
   if (!rateLimitOk) {
     return NextResponse.json({ error: 'Too many reviews submitted. Please try again later.' }, { status: 429 })
   }

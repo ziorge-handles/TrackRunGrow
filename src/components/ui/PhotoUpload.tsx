@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { Camera, Loader2, X } from 'lucide-react'
 
 interface PhotoUploadProps {
@@ -68,7 +69,14 @@ export default function PhotoUpload({ athleteId, currentUrl, onUpload }: PhotoUp
         onClick={() => inputRef.current?.click()}
       >
         {preview ? (
-          <img src={preview} alt="Athlete photo" className="w-full h-full object-cover" />
+          <Image
+            src={preview}
+            alt="Athlete photo"
+            width={96}
+            height={96}
+            unoptimized
+            className="w-full h-full object-cover"
+          />
         ) : (
           <Camera className="w-8 h-8 text-gray-400" />
         )}

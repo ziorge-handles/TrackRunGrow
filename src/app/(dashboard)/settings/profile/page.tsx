@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Save, Loader2, ArrowLeft, User } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface ProfileData {
   name: string
@@ -101,7 +102,14 @@ export default function ProfilePage() {
         <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
           <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
             {session?.user?.image ? (
-              <img src={session.user.image} alt="" className="w-16 h-16 rounded-full object-cover" />
+              <Image
+                src={session.user.image}
+                alt=""
+                width={64}
+                height={64}
+                unoptimized
+                className="w-16 h-16 rounded-full object-cover"
+              />
             ) : (
               <User className="w-7 h-7 text-blue-600" />
             )}

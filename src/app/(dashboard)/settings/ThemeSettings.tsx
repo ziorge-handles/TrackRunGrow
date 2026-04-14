@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useTheme } from '@/lib/theme-context'
 import { Sun, Moon, Monitor, Upload, Loader2 } from 'lucide-react'
 
@@ -19,7 +20,6 @@ interface Props {
 export default function ThemeSettings({ isEnterprise = false }: Props) {
   const { theme, accent, setTheme, setAccent } = useTheme()
   const [customColor, setCustomColor] = useState('#3b82f6')
-  const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [savingBranding, setSavingBranding] = useState(false)
   const [savedBranding, setSavedBranding] = useState(false)
@@ -39,7 +39,6 @@ export default function ThemeSettings({ isEnterprise = false }: Props) {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setLogoFile(file)
       const url = URL.createObjectURL(file)
       setLogoPreview(url)
     }
@@ -152,8 +151,8 @@ export default function ThemeSettings({ isEnterprise = false }: Props) {
               </label>
               <div className="flex items-center gap-4">
                 {logoPreview && (
-                  <div className="w-16 h-16 rounded-xl border border-gray-200 overflow-hidden flex items-center justify-center bg-white">
-                    <img src={logoPreview} alt="Logo" className="max-w-full max-h-full object-contain" />
+                  <div className="relative w-16 h-16 rounded-xl border border-gray-200 overflow-hidden flex items-center justify-center bg-white">
+                    <Image src={logoPreview} alt="Logo" fill className="object-contain p-1" unoptimized />
                   </div>
                 )}
                 <label className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { rateLimit } from '@/lib/rate-limit'
 
 const contactSchema = z.object({
   name: z.string().min(1, 'Name is required').max(200),
@@ -8,34 +9,14 @@ const contactSchema = z.object({
   message: z.string().min(1, 'Message is required').max(5000),
 })
 
-// Simple in-memory rate limiting (3 per IP per hour)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 })
-    return true
-  }
-
-  if (entry.count >= 3) {
-    return false
-  }
-
-  entry.count += 1
-  return true
-}
-
 export async function POST(request: NextRequest) {
-  // Rate limit by IP
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     request.headers.get('x-real-ip') ??
     'unknown'
 
-  if (!checkRateLimit(ip)) {
+  const { success: rateLimitOk } = await rateLimit(`contact:${ip}`, 3, 3_600_000)
+  if (!rateLimitOk) {
     return Response.json(
       { error: 'Too many requests. Please try again later.' },
       { status: 429 },

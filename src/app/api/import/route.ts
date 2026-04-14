@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { checkFeatureAccess } from '@/lib/plan-limits'
+import { parseCsv } from '@/lib/import-csv'
 import { z } from 'zod'
 import { WorkoutType, Gender } from '@/generated/prisma/client'
 
@@ -45,46 +46,11 @@ const workoutRowSchema = z.object({
   notes: z.string().optional(),
 })
 
-// ─── CSV parser (RFC 4180 compliant) ─────────────────────────────────────────
-
-function parseCSVLine(line: string): string[] {
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    if (inQuotes) {
-      if (char === '"' && line[i + 1] === '"') { current += '"'; i++ }
-      else if (char === '"') { inQuotes = false }
-      else { current += char }
-    } else {
-      if (char === '"') { inQuotes = true }
-      else if (char === ',') { result.push(current.trim()); current = '' }
-      else { current += char }
-    }
-  }
-  result.push(current.trim())
-  return result
-}
-
-function parseCsv(text: string): Record<string, string>[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim())
-  if (lines.length < 2) return []
-  const headers = parseCSVLine(lines[0]).map((h) => h.trim().toLowerCase())
-  return lines.slice(1).map((line) => {
-    const vals = parseCSVLine(line)
-    const row: Record<string, string> = {}
-    headers.forEach((h, i) => { row[h] = (vals[i] ?? '').trim() })
-    return row
-  })
-}
-
 // ─── Import handlers ──────────────────────────────────────────────────────────
 
 async function importRaceResults(
   rows: Record<string, string>[],
   teamId: string,
-  _userId: string,
 ): Promise<{ imported: number; errors: ImportError[] }> {
   let imported = 0
   const errors: ImportError[] = []
@@ -113,18 +79,30 @@ async function importRaceResults(
       }
 
       const raceDate = new Date(d.date)
-      const race = await prisma.race.upsert({
-        where: { id: `import-${d.race_name}-${d.date}`.slice(0, 25) },
-        create: {
-          id: `import-${d.race_name}-${d.date}`.slice(0, 25),
-          name: d.race_name,
-          sport: 'TRACK',
-          date: raceDate,
-          location: d.location ?? null,
+      let race = await prisma.race.findFirst({
+        where: {
           teamId,
+          name: d.race_name,
+          date: raceDate,
+          sport: 'TRACK',
         },
-        update: {},
       })
+      if (!race) {
+        race = await prisma.race.create({
+          data: {
+            teamId,
+            name: d.race_name,
+            sport: 'TRACK',
+            date: raceDate,
+            location: d.location ?? null,
+          },
+        })
+      } else if (d.location?.trim() && !race.location?.trim()) {
+        race = await prisma.race.update({
+          where: { id: race.id },
+          data: { location: d.location.trim() },
+        })
+      }
 
       await prisma.raceResult.create({
         data: {
@@ -147,7 +125,6 @@ async function importRaceResults(
 async function importAthletes(
   rows: Record<string, string>[],
   teamId: string,
-  _userId: string,
 ): Promise<{ imported: number; errors: ImportError[] }> {
   let imported = 0
   const errors: ImportError[] = []
@@ -336,10 +313,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   switch (type as ImportType) {
     case 'race_results':
-      result = await importRaceResults(rows, teamId, session.user.id)
+      result = await importRaceResults(rows, teamId)
       break
     case 'athletes':
-      result = await importAthletes(rows, teamId, session.user.id)
+      result = await importAthletes(rows, teamId)
       break
     case 'workouts':
       result = await importWorkouts(rows, teamId, session.user.id)

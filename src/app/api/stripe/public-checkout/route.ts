@@ -17,7 +17,7 @@ function logCheckoutError(error: unknown) {
 export async function POST(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-for')
   const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
-  const { success: rateLimitOk } = rateLimit(`public-checkout:${ip}`, 10, 60000)
+  const { success: rateLimitOk } = await rateLimit(`public-checkout:${ip}`, 10, 60000)
   if (!rateLimitOk) {
     return Response.json({ error: 'Too many requests. Please wait before trying again.' }, { status: 429 })
   }

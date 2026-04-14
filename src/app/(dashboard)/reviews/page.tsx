@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, CheckCircle, XCircle, Clock, MessageSquare } from 'lucide-react'
+import { Star, CheckCircle, XCircle, MessageSquare } from 'lucide-react'
 
 interface Review {
   id: string

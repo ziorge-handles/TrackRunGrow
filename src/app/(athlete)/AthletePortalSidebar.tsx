@@ -12,6 +12,7 @@ import {
   LogOut,
   Activity,
   BarChart2,
+  Home,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -74,14 +75,22 @@ export default function AthletePortalSidebar() {
       </nav>
 
       <div className="px-4 py-4 border-t border-gray-100 space-y-2">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 w-full px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <Home className="w-4 h-4 text-gray-400" />
+          Marketing site
+        </Link>
         <button
+          type="button"
           onClick={() => signOut({ callbackUrl: '/' })}
-          className="flex items-center gap-2 text-red-500 hover:text-red-400 text-sm w-full px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
+          className="flex items-center gap-2 text-red-600 hover:text-red-700 text-sm w-full px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
         >
           <LogOut className="w-4 h-4" />
-          Sign Out
+          Sign out
         </button>
-        <p className="text-xs text-gray-400 text-center">
+        <p className="text-xs text-gray-400 text-center pt-1">
           TrackRunGrow &copy; {new Date().getFullYear()}
         </p>
       </div>

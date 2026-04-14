@@ -2,7 +2,13 @@ import { PrismaClient } from '@/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 function createPrismaClient(): PrismaClient {
-  const url = process.env.DATABASE_URL ?? ''
+  const url = process.env.DATABASE_URL
+
+  if (!url) {
+    throw new Error(
+      'DATABASE_URL is not set. Add it to .env.local (see .env.example).',
+    )
+  }
 
   // prisma+postgres:// URLs are for Prisma's local dev server / Accelerate.
   // In production or when a standard pg URL is provided, use PrismaPg adapter.
@@ -23,12 +29,9 @@ function createPrismaClient(): PrismaClient {
     })
   }
 
-  // Fallback: attempt PrismaPg with whatever URL is provided
-  const adapter = new PrismaPg(url || 'postgresql://localhost:5432/trackrungrow')
-  return new PrismaClient({
-    adapter,
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  })
+  throw new Error(
+    `DATABASE_URL has an unrecognised scheme. Expected postgresql://, postgres://, or prisma+postgres://. Got: ${url.split('://')[0]}://...`,
+  )
 }
 
 const globalForPrisma = globalThis as unknown as {

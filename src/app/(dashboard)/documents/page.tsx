@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { Upload, FileText, Image, Video, File, Download, Search, Grid, List, ChevronDown } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
+import { Upload, FileText, Image as ImageIcon, Video, File, Download, Search, Grid, List, ChevronDown } from 'lucide-react'
 
 type DocumentType = 'FORM' | 'WAIVER' | 'PHOTO' | 'VIDEO' | 'REPORT' | 'OTHER'
 type ViewMode = 'grid' | 'list'
@@ -24,7 +25,7 @@ interface Document {
 const TYPE_ICONS: Record<DocumentType, React.FC<{ className?: string }>> = {
   FORM: FileText,
   WAIVER: FileText,
-  PHOTO: Image,
+  PHOTO: ImageIcon,
   VIDEO: Video,
   REPORT: FileText,
   OTHER: File,
@@ -67,9 +68,8 @@ export default function DocumentsPage() {
   const [showUpload, setShowUpload] = useState(false)
   const [uploadForm, setUploadForm] = useState({ name: '', type: 'FORM' as DocumentType, fileUrl: '', description: '', isPublic: false })
   const [uploading, setUploading] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
 
-  async function fetchDocs() {
+  const fetchDocs = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -83,9 +83,9 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [tab, typeFilter, teamId, athleteId])
 
-  useEffect(() => { fetchDocs() }, [tab, typeFilter])
+  useEffect(() => { void fetchDocs() }, [fetchDocs])
 
   async function uploadDocument() {
     setUploading(true)
@@ -239,7 +239,14 @@ export default function DocumentsPage() {
               <div key={doc.id} className="bg-white border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors group">
                 <div className="flex items-center justify-center h-16 mb-3">
                   {doc.type === 'PHOTO' && doc.mimeType?.startsWith('image/') ? (
-                    <img src={doc.fileUrl} alt={doc.name} className="h-16 w-full object-cover rounded-lg" />
+                    <Image
+                      src={doc.fileUrl}
+                      alt={doc.name}
+                      width={320}
+                      height={64}
+                      unoptimized
+                      className="h-16 w-full object-cover rounded-lg"
+                    />
                   ) : (
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${TYPE_COLORS[doc.type]}`}>
                       <Icon className="w-6 h-6" />

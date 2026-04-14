@@ -1,36 +1,11 @@
 import { NextRequest } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import type { SubscriptionPlan, SubscriptionStatus } from '@/generated/prisma/client'
+import type { SubscriptionPlan } from '@/generated/prisma/client'
 import type Stripe from 'stripe'
+import { getPlanFromPriceId, mapStripeStatus } from '@/lib/stripe-webhook'
 
 export const runtime = 'nodejs'
-
-function getPlanFromPriceId(priceId: string): SubscriptionPlan {
-  if (priceId === process.env.STRIPE_PRO_PRICE_ID) return 'PRO'
-  if (priceId === process.env.STRIPE_ENTERPRISE_PRICE_ID) return 'ENTERPRISE'
-  return 'BASIC'
-}
-
-function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus {
-  switch (status) {
-    case 'active':
-      return 'ACTIVE'
-    case 'past_due':
-      return 'PAST_DUE'
-    case 'canceled':
-      return 'CANCELED'
-    case 'trialing':
-      return 'TRIALING'
-    case 'incomplete':
-    case 'incomplete_expired':
-      return 'INCOMPLETE'
-    case 'unpaid':
-      return 'PAST_DUE'
-    default:
-      return 'ACTIVE'
-  }
-}
 
 export async function POST(request: NextRequest) {
   const body = await request.text()

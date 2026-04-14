@@ -7,7 +7,7 @@ import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
-  const rl = rateLimit(`reset-${ip}`, 5, 3600000) // 5 per hour
+  const rl = await rateLimit(`reset-${ip}`, 5, 3600000) // 5 per hour
   if (!rl.success) {
     return Response.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
   }

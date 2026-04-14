@@ -6,7 +6,7 @@ import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
-  const rl = rateLimit(`forgot-${ip}`, 3, 3600000) // 3 per hour
+  const rl = await rateLimit(`forgot-${ip}`, 3, 3600000) // 3 per hour
   if (!rl.success) return Response.json({ message: 'Check your email for reset instructions.' })
 
   const { email } = await request.json() as { email: string }

@@ -1,9 +1,14 @@
-import NextAuth from 'next-auth'
+import '@/lib/env'
+import NextAuth, { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { Role } from '@/generated/prisma/client'
+
+class EmailNotVerified extends CredentialsSignin {
+  code = 'email_not_verified'
+}
 
 const { handlers, auth: authInternal, signIn, signOut } = NextAuth({
   // Required on Vercel / reverse proxies unless AUTH_URL matches the public origin exactly.
@@ -35,6 +40,10 @@ const { handlers, auth: authInternal, signIn, signOut } = NextAuth({
         )
 
         if (!isValid) return null
+
+        if (!user.emailVerified) {
+          throw new EmailNotVerified()
+        }
 
         return {
           id: user.id,

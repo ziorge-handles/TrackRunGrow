@@ -1,31 +1,18 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { rateLimit } from '@/lib/rate-limit'
 import { BCRYPT_ROUNDS } from '@/lib/constants'
-import { randomBytes, createHash } from 'crypto'
-import { sendVerificationEmail } from '@/lib/email'
+import { issueEmailVerification } from '@/lib/issue-email-verification'
 import { stripe } from '@/lib/stripe'
-import type { SubscriptionPlan } from '@/generated/prisma/client'
-
-const registerSchema = z.object({
-  name: z.string().min(2).max(100, 'Name too long'),
-  email: z.string().email().max(254, 'Email too long'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(128, 'Password too long')
-    .regex(/[a-z]/, 'Must contain a lowercase letter')
-    .regex(/[A-Z]/, 'Must contain an uppercase letter')
-    .regex(/[0-9]/, 'Must contain a number'),
-  stripeSessionId: z.string().optional(),
-})
+import type { CoachRole, SubscriptionPlan } from '@/generated/prisma/client'
+import { registerSchema } from '@/lib/register-schema'
 
 export async function POST(request: Request) {
   try {
     const forwarded = request.headers.get('x-forwarded-for')
     const ip = forwarded?.split(',')[0]?.trim() || 'unknown'
-    const { success: rateLimitOk } = rateLimit(`register:${ip}`, 5, 60000)
+    const { success: rateLimitOk } = await rateLimit(`register:${ip}`, 5, 60000)
     if (!rateLimitOk) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
@@ -43,14 +30,47 @@ export async function POST(request: Request) {
       )
     }
 
-    const { name, email: clientEmail, password, stripeSessionId } = result.data
+    const { name, password, stripeSessionId, inviteToken } = result.data
 
-    let resolvedEmail = clientEmail
+    let resolvedEmail: string
     let stripeCustomerId: string | null = null
     let plan: SubscriptionPlan = 'BASIC'
     let stripeSubscriptionId: string | null = null
+    let pendingInvite: {
+      id: string
+      teamId: string
+      coachRole: CoachRole
+    } | null = null
 
-    if (stripeSessionId) {
+    if (inviteToken) {
+      const invitation = await prisma.teamInvitation.findUnique({
+        where: { token: inviteToken },
+      })
+
+      if (!invitation) {
+        return NextResponse.json({ error: 'Invalid invitation.' }, { status: 400 })
+      }
+      if (invitation.status !== 'PENDING') {
+        return NextResponse.json(
+          { error: `This invitation is no longer valid (${invitation.status}).` },
+          { status: 410 },
+        )
+      }
+      if (invitation.expiresAt < new Date()) {
+        await prisma.teamInvitation.update({
+          where: { token: inviteToken },
+          data: { status: 'EXPIRED' },
+        })
+        return NextResponse.json({ error: 'This invitation has expired.' }, { status: 410 })
+      }
+
+      resolvedEmail = invitation.invitedEmail.trim()
+      pendingInvite = {
+        id: invitation.id,
+        teamId: invitation.teamId,
+        coachRole: invitation.coachRole,
+      }
+    } else if (stripeSessionId) {
       try {
         const session = await stripe.checkout.sessions.retrieve(stripeSessionId, {
           expand: ['subscription'],
@@ -64,8 +84,9 @@ export async function POST(request: Request) {
         }
 
         const stripeEmail = session.customer_details?.email ?? session.customer_email
-        if (stripeEmail) {
-          resolvedEmail = stripeEmail
+        resolvedEmail = (stripeEmail ?? result.data.email ?? '').trim()
+        if (!resolvedEmail) {
+          return NextResponse.json({ error: 'Could not resolve email from checkout.' }, { status: 400 })
         }
 
         stripeCustomerId = session.customer as string
@@ -74,9 +95,10 @@ export async function POST(request: Request) {
           plan = planMeta as SubscriptionPlan
         }
         if (session.subscription) {
-          const sub = typeof session.subscription === 'string'
-            ? session.subscription
-            : session.subscription.id
+          const sub =
+            typeof session.subscription === 'string'
+              ? session.subscription
+              : session.subscription.id
           stripeSubscriptionId = sub
         }
       } catch (e) {
@@ -86,12 +108,19 @@ export async function POST(request: Request) {
           { status: 400 },
         )
       }
+    } else {
+      return NextResponse.json(
+        { error: 'Complete payment or open a valid team invitation link to register.' },
+        { status: 400 },
+      )
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: resolvedEmail } })
+    const existing = await prisma.user.findFirst({
+      where: { email: { equals: resolvedEmail, mode: 'insensitive' } },
+    })
     if (existing) {
       return NextResponse.json(
-        { error: 'An account with this email already exists.' },
+        { error: 'An account with this email already exists. Sign in to accept the invitation.' },
         { status: 409 },
       )
     }
@@ -114,30 +143,51 @@ export async function POST(request: Request) {
       data: {
         userId: user.id,
         plan,
-        status: stripeCustomerId ? 'ACTIVE' : 'ACTIVE',
+        status: 'ACTIVE',
         stripeCustomerId,
         stripeSubscriptionId,
       },
     })
 
-    const verifyToken = randomBytes(32).toString('hex')
-    const hashedVerifyToken = createHash('sha256').update(verifyToken).digest('hex')
-    const verifyExpires = new Date(Date.now() + 24 * 3600000)
-
-    await prisma.verificationToken.create({
-      data: {
-        identifier: resolvedEmail,
-        token: hashedVerifyToken,
-        expires: verifyExpires,
-      },
-    })
-
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
-    try {
-      await sendVerificationEmail({
-        to: resolvedEmail,
-        verifyUrl: `${baseUrl}/verify-email?token=${verifyToken}&email=${resolvedEmail}`,
+    if (pendingInvite) {
+      const stillPending = await prisma.teamInvitation.findFirst({
+        where: {
+          id: pendingInvite.id,
+          status: 'PENDING',
+          expiresAt: { gte: new Date() },
+        },
       })
+      if (stillPending) {
+        const coach = await prisma.coach.findUnique({ where: { userId: user.id } })
+        if (coach) {
+          const existingCt = await prisma.coachTeam.findUnique({
+            where: {
+              coachId_teamId: {
+                coachId: coach.id,
+                teamId: pendingInvite.teamId,
+              },
+            },
+          })
+          if (!existingCt) {
+            await prisma.coachTeam.create({
+              data: {
+                coachId: coach.id,
+                teamId: pendingInvite.teamId,
+                coachRole: pendingInvite.coachRole,
+                isPrimary: false,
+              },
+            })
+          }
+          await prisma.teamInvitation.update({
+            where: { id: pendingInvite.id },
+            data: { status: 'ACCEPTED', acceptedAt: new Date() },
+          })
+        }
+      }
+    }
+
+    try {
+      await issueEmailVerification(resolvedEmail)
     } catch (e) {
       console.error('Failed to send verification email:', e)
     }

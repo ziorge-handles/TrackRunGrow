@@ -16,7 +16,10 @@ export default async function AdminLayout({
   }
 
   if (session.user.role !== 'ADMIN') {
-    redirect('/')
+    if (session.user.role === 'ATHLETE') {
+      redirect('/portal')
+    }
+    redirect('/dashboard')
   }
 
   return (

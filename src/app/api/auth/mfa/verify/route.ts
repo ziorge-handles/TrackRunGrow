@@ -23,7 +23,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   // Rate limit by user ID — 5 attempts per minute
-  const { success: rateLimitOk } = rateLimit(`mfa-verify:${session.user.id}`, 5, 60000)
+  const { success: rateLimitOk } = await rateLimit(`mfa-verify:${session.user.id}`, 5, 60000)
   if (!rateLimitOk) {
     return NextResponse.json(
       { error: 'Too many attempts. Please try again later.' },

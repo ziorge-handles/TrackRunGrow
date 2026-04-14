@@ -31,11 +31,13 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const { data: session, status } = useSession()
   const [error, setError] = useState<string | null>(null)
+  const [needsVerification, setNeedsVerification] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -47,6 +49,8 @@ function LoginForm() {
       router.replace('/demo')
     }
   }, [searchParams, router])
+
+  const verifiedBanner = searchParams.get('verified') === 'true'
 
   // Redirect already-logged-in users based on role
   useEffect(() => {
@@ -65,6 +69,7 @@ function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     setError(null)
+    setNeedsVerification(false)
 
     try {
       const result = await signIn('credentials', {
@@ -74,7 +79,16 @@ function LoginForm() {
       })
 
       if (result?.error) {
-        setError('Invalid email or password. Please try again.')
+        const unverified =
+          result.error === 'CredentialsSignin' && result.code === 'email_not_verified'
+        if (unverified) {
+          setNeedsVerification(true)
+          setError(
+            'Please verify your email before signing in. Check your inbox or request a new link below.',
+          )
+        } else {
+          setError('Invalid email or password. Please try again.')
+        }
       } else {
         // Force a session refresh so we can read the role
         router.refresh()
@@ -98,10 +112,26 @@ function LoginForm() {
         <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
       </div>
 
+      {verifiedBanner && (
+        <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
+          Your email is verified. You can sign in below.
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {error && (
           <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
             {error}
+            {needsVerification && (
+              <div className="mt-3 pt-3 border-t border-red-200">
+                <Link
+                  href={`/resend-verification?email=${encodeURIComponent(getValues('email') || '')}`}
+                  className="font-medium text-emerald-700 hover:text-emerald-800 underline-offset-2 hover:underline"
+                >
+                  Resend verification email
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
@@ -152,6 +182,16 @@ function LoginForm() {
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-500">
+        Didn&apos;t get a verification email?{' '}
+        <Link
+          href="/resend-verification"
+          className="font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          Resend link
+        </Link>
+      </p>
+
+      <p className="mt-2 text-center text-sm text-gray-500">
         Don&apos;t have an account?{' '}
         <Link
           href="/register"
@@ -163,7 +203,10 @@ function LoginForm() {
 
       <div className="mt-4 pt-4 border-t border-gray-100">
         <p className="text-xs text-center text-gray-400">
-          Want to try it out? <a href="/demo" className="text-emerald-600 hover:text-emerald-700 font-medium">Watch the demo</a>
+          Want to try it out?{' '}
+          <a href="/demo" className="text-emerald-600 hover:text-emerald-700 font-medium">
+            Try Interactive Demo
+          </a>
         </p>
       </div>
     </>

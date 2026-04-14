@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 
@@ -26,15 +27,16 @@ function VerifyEmailForm() {
   const router = useRouter()
   const token = searchParams.get('token')
   const email = searchParams.get('email')
-  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
-  const [errorMsg, setErrorMsg] = useState('')
+  const missingParams = !token || !email
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>(() =>
+    missingParams ? 'error' : 'verifying',
+  )
+  const [errorMsg, setErrorMsg] = useState(() =>
+    missingParams ? 'Invalid verification link.' : '',
+  )
 
   useEffect(() => {
-    if (!token || !email) {
-      setStatus('error')
-      setErrorMsg('Invalid verification link.')
-      return
-    }
+    if (!token || !email) return
 
     let cancelled = false
 
@@ -81,14 +83,27 @@ function VerifyEmailForm() {
     )
   }
 
+  const resendHref = email
+    ? `/resend-verification?email=${encodeURIComponent(email)}`
+    : '/resend-verification'
+
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4">
+    <div className="flex flex-col items-center justify-center py-8 gap-4 text-center">
       <XCircle className="w-12 h-12 text-red-500" />
       <h2 className="text-xl font-semibold text-gray-900">Verification Failed</h2>
-      <p className="text-sm text-gray-500">{errorMsg}</p>
+      <p className="text-sm text-gray-500 max-w-sm">{errorMsg}</p>
+      <p className="text-sm text-gray-600">
+        <Link
+          href={resendHref}
+          className="font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          Request a new verification link
+        </Link>
+      </p>
       <button
+        type="button"
         onClick={() => router.push('/login')}
-        className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+        className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
       >
         Go to Login
       </button>

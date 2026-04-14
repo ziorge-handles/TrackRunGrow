@@ -249,6 +249,8 @@ model Team {
   athletes       AthleteTeam[]
   calendarEvents CalendarEvent[]
   invitations    TeamInvitation[]
+  races          Race[]
+  lineups        MeetLineup[]
 
   @@index([ownerId])
   @@map("teams")
@@ -367,6 +369,8 @@ model BodyMetric {
   notes      String?
 
   athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@index([athleteId, recordedAt])
 }
 
 // ─── Track Events ─────────────────────────────────────────────────────────────
@@ -414,7 +418,11 @@ model Race {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  team    Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
   results RaceResult[]
+  lineups MeetLineup[]
+
+  @@index([teamId])
 }
 
 model RaceResult {
@@ -435,6 +443,9 @@ model RaceResult {
   race       Race        @relation(fields: [raceId], references: [id], onDelete: Cascade)
   athlete    Athlete     @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   trackEvent TrackEvent? @relation(fields: [trackEventId], references: [id])
+
+  @@index([athleteId, recordedAt])
+  @@index([raceId])
 }
 
 model PersonalBest {
@@ -472,6 +483,8 @@ model WorkoutLog {
 
   athlete   Athlete           @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   intervals WorkoutInterval[]
+
+  @@index([athleteId, date])
 }
 
 model WorkoutInterval {
@@ -509,7 +522,10 @@ model CalendarEvent {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
-  team Team? @relation(fields: [teamId], references: [id])
+  team       Team?             @relation(fields: [teamId], references: [id])
+  attendance EventAttendance[]
+
+  @@index([teamId, startTime])
 }
 
 // ─── AI Suggestions ───────────────────────────────────────────────────────────
@@ -527,6 +543,8 @@ model AiSuggestion {
   createdAt   DateTime  @default(now())
 
   athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@index([athleteId, createdAt])
 }
 
 // ─── MFA & Extended User Fields ────────────────────────────────────────────────
@@ -545,9 +563,12 @@ model MeetLineup {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  race    Race         @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  team    Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   entries LineupEntry[]
 
   @@index([raceId])
+  @@index([teamId])
   @@map("meet_lineups")
 }
 
@@ -567,6 +588,8 @@ model LineupEntry {
   athlete    Athlete     @relation(fields: [athleteId], references: [id])
   trackEvent TrackEvent? @relation(fields: [trackEventId], references: [id])
 
+  @@index([lineupId])
+  @@index([athleteId])
   @@map("lineup_entries")
 }
 
@@ -583,9 +606,11 @@ model EventAttendance {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
-  athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  calendarEvent CalendarEvent @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  athlete       Athlete       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   @@unique([calendarEventId, athleteId])
+  @@index([athleteId])
   @@map("event_attendance")
 }
 
@@ -616,6 +641,7 @@ model MessageRecipient {
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
+  @@index([userId, isRead])
   @@map("message_recipients")
 }
 

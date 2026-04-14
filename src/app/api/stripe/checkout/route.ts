@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
-import { stripe, PLANS, getOrLookupPriceId } from '@/lib/stripe'
+import { stripe, getOrLookupPriceId } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
   Users, Trophy, TrendingUp, Calendar, Timer, Plus, Trash2,
@@ -447,8 +447,7 @@ function ResultsTab({ results, athletes, events, showAdd, setShowAdd, onAdd, onR
       }
       if (resultValue <= 0) { setInputError('Distance must be positive'); return }
     } else {
-      // Parse time input
-      const timeStr = `${minutes || '0'}:${seconds || '0'}`
+      // Parse time input (mm:ss → seconds)
       const totalSecs = (parseFloat(minutes || '0') * 60) + parseFloat(seconds || '0')
       if (totalSecs <= 0) { setInputError('Time must be positive'); return }
       resultValue = totalSecs

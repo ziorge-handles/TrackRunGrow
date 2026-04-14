@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, User, Trophy, Activity, Calendar, Settings, Zap,
   AlignJustify, X, CalendarCheck, MessageSquare, DollarSign, FileText,
   Tag, ClipboardList, ArrowDownUp, Lock, ListChecks, ChevronDown, ChevronRight,
-  Shield,
+  Shield, Home,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SportToggle from './SportToggle'
@@ -201,6 +201,13 @@ export default function Sidebar() {
             Switch to Admin View
           </Link>
         )}
+        <Link
+          href="/"
+          className="flex items-center justify-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-800 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <Home className="w-3.5 h-3.5" />
+          Marketing site
+        </Link>
         <p className="text-xs text-gray-400 text-center">
           TrackRunGrow &copy; {new Date().getFullYear()}
         </p>
