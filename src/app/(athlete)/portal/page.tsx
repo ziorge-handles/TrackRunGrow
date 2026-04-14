@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { logServerError, serverDebug } from '@/lib/server-debug'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +18,7 @@ export default async function AthletePortalHome() {
   const session = await auth()
   if (!session?.user) redirect('/login')
 
+  try {
   let athleteBase = await prisma.athlete.findUnique({ where: { userId: session.user.id } })
   if (!athleteBase) {
     athleteBase = await prisma.athlete.create({ data: { userId: session.user.id } })
@@ -54,14 +56,22 @@ export default async function AthletePortalHome() {
   }
 
   const teamIds = athlete.teams.map((at) => at.teamId)
-
-  const nextRace = await prisma.race.findFirst({
-    where: {
-      teamId: { in: teamIds },
-      date: { gte: new Date() },
-    },
-    orderBy: { date: 'asc' },
+  serverDebug('portal', {
+    userId: session.user.id,
+    athleteId: athlete.id,
+    teamIdsCount: teamIds.length,
   })
+
+  const nextRace =
+    teamIds.length === 0
+      ? null
+      : await prisma.race.findFirst({
+          where: {
+            teamId: { in: teamIds },
+            date: { gte: new Date() },
+          },
+          orderBy: { date: 'asc' },
+        })
 
   const weeklyMileage = athlete.workoutLogs.reduce((sum, w) => sum + (w.distanceMiles ?? 0), 0)
   const daysUntilRace = nextRace ? getDaysUntil(nextRace.date) : null
@@ -188,6 +198,10 @@ export default async function AthletePortalHome() {
       </div>
     </div>
   )
+  } catch (err) {
+    logServerError('portal:home', err, { userId: session.user.id })
+    throw err
+  }
 }
 
 function StatCard({ icon, label, value, sub }: {

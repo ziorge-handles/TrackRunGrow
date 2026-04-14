@@ -1,4 +1,5 @@
 import '@/lib/env'
+import { logServerError } from '@/lib/server-debug'
 import NextAuth, { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
@@ -111,7 +112,7 @@ export async function auth() {
   try {
     return await authInternal()
   } catch (error) {
-    console.error('[auth] Failed to resolve session:', error)
+    logServerError('auth:session', error)
     return null
   }
 }

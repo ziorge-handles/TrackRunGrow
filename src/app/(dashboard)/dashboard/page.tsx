@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { logServerError, serverDebug } from '@/lib/server-debug'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,7 @@ import { Trophy, Users, Activity, Calendar } from 'lucide-react'
 import Link from 'next/link'
 
 async function getDashboardData(userId: string) {
+  try {
   let coach = await prisma.coach.findUnique({
     where: { userId },
     include: {
@@ -29,32 +31,44 @@ async function getDashboardData(userId: string) {
   }
 
   const teamIds = coach.teams.map((ct) => ct.team.id)
-
-  const upcomingRaces = await prisma.race.findMany({
-    where: {
-      teamId: { in: teamIds },
-      date: { gte: new Date() },
-    },
-    orderBy: { date: 'asc' },
-    take: 5,
+  serverDebug('dashboard', {
+    userId,
+    teamCount: coach.teams.length,
+    teamIdsCount: teamIds.length,
   })
 
-  const recentResults = await prisma.raceResult.findMany({
-    where: {
-      race: {
-        teamId: { in: teamIds },
-      },
-    },
-    include: {
-      race: true,
-      athlete: {
-        include: { user: true },
-      },
-      trackEvent: true,
-    },
-    orderBy: { recordedAt: 'desc' },
-    take: 10,
-  })
+  // Prisma rejects `{ in: [] }` — new coaches have no teams yet.
+  const upcomingRaces =
+    teamIds.length === 0
+      ? []
+      : await prisma.race.findMany({
+          where: {
+            teamId: { in: teamIds },
+            date: { gte: new Date() },
+          },
+          orderBy: { date: 'asc' },
+          take: 5,
+        })
+
+  const recentResults =
+    teamIds.length === 0
+      ? []
+      : await prisma.raceResult.findMany({
+          where: {
+            race: {
+              teamId: { in: teamIds },
+            },
+          },
+          include: {
+            race: true,
+            athlete: {
+              include: { user: true },
+            },
+            trackEvent: true,
+          },
+          orderBy: { recordedAt: 'desc' },
+          take: 10,
+        })
 
   const athleteCount = new Set(
     coach.teams.flatMap((ct) => ct.team.athletes.map((a) => a.athleteId)),
@@ -74,6 +88,10 @@ async function getDashboardData(userId: string) {
     athleteCount,
     teamCount: coach.teams.length,
     recentWorkouts,
+  }
+  } catch (err) {
+    logServerError('dashboard:getDashboardData', err, { userId })
+    throw err
   }
 }
 

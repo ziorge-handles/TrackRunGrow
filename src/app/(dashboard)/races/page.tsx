@@ -28,6 +28,8 @@ async function getRaces(userId: string, filter?: string) {
   })
 
   const teamIds = teams.map((t) => t.id)
+  if (teamIds.length === 0) return []
+
   const now = new Date()
 
   return prisma.race.findMany({
