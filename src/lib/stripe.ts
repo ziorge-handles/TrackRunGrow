@@ -1,9 +1,15 @@
 import Stripe from 'stripe'
 
+/** Canonical `STRIPE_SECRET_KEY`; `STRIPE_SECRET` is accepted as an alias (e.g. some dashboards use that name). */
+export function stripeSecretKey(): string | undefined {
+  const k = process.env.STRIPE_SECRET_KEY?.trim() || process.env.STRIPE_SECRET?.trim()
+  return k || undefined
+}
+
 function getStripe(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY
+  const key = stripeSecretKey()
   if (!key) {
-    throw new Error('STRIPE_SECRET_KEY is not set')
+    throw new Error('STRIPE_SECRET_KEY or STRIPE_SECRET is not set')
   }
   return new Stripe(key, { apiVersion: '2026-03-25.dahlia' })
 }

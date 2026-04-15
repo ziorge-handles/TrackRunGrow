@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import Stripe from 'stripe'
-import { stripe, PLANS, getOrLookupPriceId } from '@/lib/stripe'
+import { stripe, PLANS, getOrLookupPriceId, stripeSecretKey } from '@/lib/stripe'
 import { rateLimit } from '@/lib/rate-limit'
 import { getPublicSiteOrigin } from '@/lib/site-url'
 
@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Too many requests. Please wait before trying again.' }, { status: 429 })
   }
 
-  if (!process.env.STRIPE_SECRET_KEY?.trim()) {
-    console.error('[stripe/public-checkout] STRIPE_SECRET_KEY is not set')
+  if (!stripeSecretKey()) {
+    console.error('[stripe/public-checkout] STRIPE_SECRET_KEY or STRIPE_SECRET is not set')
     return Response.json(
       { error: 'Checkout is not configured. Please contact support.' },
       { status: 503 },

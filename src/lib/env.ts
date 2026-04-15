@@ -33,7 +33,11 @@ export function validateEnv(): void {
     requireEnv('NEXTAUTH_URL', 'Set to your production URL (e.g. https://trackrungrow.com). Required for OAuth redirects and email links.')
   }
 
-  warnEnv('STRIPE_SECRET_KEY', 'Stripe checkout will not work without this.')
+  if (!process.env.STRIPE_SECRET_KEY?.trim() && !process.env.STRIPE_SECRET?.trim()) {
+    console.warn(
+      '[env] STRIPE_SECRET_KEY or STRIPE_SECRET is not set. Stripe checkout will not work without one of these.',
+    )
+  }
   warnEnv('SENDGRID_API_KEY', 'Email sending (verification, contact form) will not work without this.')
 }
 
