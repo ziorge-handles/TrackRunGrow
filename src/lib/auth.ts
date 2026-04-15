@@ -1,8 +1,7 @@
 import '@/lib/env'
-import { logServerError } from '@/lib/server-debug'
+import { isVerboseServerDebug, logServerError } from '@/lib/server-debug'
 import NextAuth, { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import type { Role } from '@/generated/prisma/client'
@@ -14,7 +13,10 @@ class EmailNotVerified extends CredentialsSignin {
 const { handlers, auth: authInternal, signIn, signOut } = NextAuth({
   // Required on Vercel / reverse proxies unless AUTH_URL matches the public origin exactly.
   trustHost: true,
-  adapter: PrismaAdapter(prisma),
+  // Explicit secret avoids empty-array edge cases when env is loaded late; validateEnv already requires AUTH_SECRET in production.
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  debug: isVerboseServerDebug(),
+  // JWT sessions + credentials provider do not use the Prisma adapter; omitting it avoids duplicate @auth/core copies and adapter edge cases.
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
@@ -29,29 +31,36 @@ const { handlers, auth: authInternal, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        })
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          })
 
-        if (!user || !user.passwordHash) return null
+          if (!user || !user.passwordHash) return null
 
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash,
-        )
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            user.passwordHash,
+          )
 
-        if (!isValid) return null
+          if (!isValid) return null
 
-        if (!user.emailVerified) {
-          throw new EmailNotVerified()
-        }
+          if (!user.emailVerified) {
+            throw new EmailNotVerified()
+          }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+          }
+        } catch (error) {
+          if (error instanceof CredentialsSignin) throw error
+          logServerError('auth:credentials', error)
+          // Auth.js wraps unknown errors as CallbackRouteError (500). Map infra/DB failures to a sign-in failure.
+          throw new CredentialsSignin()
         }
       },
     }),
