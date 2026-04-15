@@ -121,11 +121,13 @@ function ResendForm() {
         </form>
       )}
 
-      <p className="mt-6 text-center text-sm text-gray-500">
-        <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-700">
-          Back to sign in
-        </Link>
-      </p>
+      {!submitted && (
+        <p className="mt-6 text-center text-sm text-gray-500">
+          <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-700">
+            Back to sign in
+          </Link>
+        </p>
+      )}
     </>
   )
 }

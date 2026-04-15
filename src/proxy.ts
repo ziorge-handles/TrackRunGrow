@@ -37,6 +37,8 @@ function isPublicPath(path: string): boolean {
 
   // Static assets, images, Next.js internals
   if (path.startsWith('/_next')) return true
+  // Vercel Analytics / Speed Insights inject these; must not redirect to login (would serve HTML as JS).
+  if (path.startsWith('/_vercel')) return true
   if (path.startsWith('/favicon')) return true
   if (path === '/robots.txt' || path === '/sitemap.xml' || path === '/opengraph-image') return true
 

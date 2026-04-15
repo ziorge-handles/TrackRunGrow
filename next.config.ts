@@ -15,7 +15,7 @@ function contentSecurityPolicy(): string {
     "font-src 'self' data:",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.ingest.sentry.io https://*.sentry.io https://vitals.vercel-insights.com https://va.vercel-scripts.com https://*.upstash.io",
-    "frame-src https://js.stripe.com https://hooks.stripe.com",
+    "frame-src https://js.stripe.com https://hooks.stripe.com https://vercel.live",
     "frame-ancestors 'none'",
     "form-action 'self'",
   ].join('; ')
