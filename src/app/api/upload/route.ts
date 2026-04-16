@@ -1,10 +1,28 @@
+import { randomBytes } from 'crypto'
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { getSupabaseClient } from '@/lib/supabase'
 import { prisma } from '@/lib/prisma'
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024 // 10MB
+
+const PHOTO_MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+}
+
+/** Keep document uploads to a small allowlist; extend only after reviewing Supabase bucket policies. */
+const DOCUMENT_MIME_TO_EXT: Record<string, string> = {
+  'application/pdf': 'pdf',
+}
+
+function safeExtension(mime: string, kind: 'photo' | 'document'): string | null {
+  const map = kind === 'photo' ? PHOTO_MIME_TO_EXT : DOCUMENT_MIME_TO_EXT
+  return map[mime] ?? null
+}
 
 export async function POST(request: NextRequest) {
   const session = await auth()
@@ -14,18 +32,41 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const athleteId = formData.get('athleteId') as string | null
-    const type = formData.get('type') as string || 'photo' // photo, document
+    const type = (formData.get('type') as string) || 'photo'
 
     if (!file) return Response.json({ error: 'No file provided' }, { status: 400 })
-    if (file.size > MAX_FILE_SIZE) return Response.json({ error: 'File too large (max 5MB)' }, { status: 400 })
-    if (type === 'photo' && !ALLOWED_TYPES.includes(file.type)) {
-      return Response.json({ error: 'Invalid file type. Allowed: JPEG, PNG, WebP, GIF' }, { status: 400 })
+
+    const uploadKind: 'photo' | 'document' = type === 'photo' ? 'photo' : 'document'
+    const maxSize = uploadKind === 'photo' ? MAX_PHOTO_SIZE : MAX_DOCUMENT_SIZE
+    if (file.size > maxSize) {
+      return Response.json(
+        {
+          error:
+            uploadKind === 'photo'
+              ? 'File too large (max 5MB)'
+              : 'File too large (max 10MB for documents)',
+        },
+        { status: 400 },
+      )
+    }
+
+    const ext = safeExtension(file.type, uploadKind)
+    if (!ext) {
+      return Response.json(
+        {
+          error:
+            uploadKind === 'photo'
+              ? 'Invalid file type. Allowed: JPEG, PNG, WebP, GIF'
+              : 'Invalid file type. Allowed: PDF',
+        },
+        { status: 400 },
+      )
     }
 
     const supabase = getSupabaseClient()
-    const ext = file.name.split('.').pop() || 'jpg'
-    const fileName = `${session.user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const bucket = type === 'photo' ? 'athlete-photos' : 'documents'
+    const unique = randomBytes(8).toString('hex')
+    const fileName = `${session.user.id}/${Date.now()}-${unique}.${ext}`
+    const bucket = uploadKind === 'photo' ? 'athlete-photos' : 'documents'
 
     const arrayBuffer = await file.arrayBuffer()
     const { error: uploadError } = await supabase.storage
@@ -43,8 +84,7 @@ export async function POST(request: NextRequest) {
     const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName)
     const publicUrl = urlData.publicUrl
 
-    // Update athlete photo if athleteId provided — verify access first
-    if (athleteId && type === 'photo') {
+    if (athleteId && uploadKind === 'photo') {
       const athleteTeam = await prisma.athleteTeam.findFirst({
         where: {
           athleteId,

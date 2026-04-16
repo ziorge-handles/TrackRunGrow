@@ -1,11 +1,21 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ token: string }> },
 ) {
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    'unknown'
+  const { success: rlOk } = await rateLimit(`invitation-preview:${ip}`, 40, 60_000)
+  if (!rlOk) {
+    return Response.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const { token } = await params
 
   const invitation = await prisma.teamInvitation.findUnique({

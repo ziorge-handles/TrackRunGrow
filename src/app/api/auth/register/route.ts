@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { name, password, stripeSessionId, inviteToken } = result.data
+    const { name, password, stripeSessionId, checkoutRef, inviteToken } = result.data
 
     let resolvedEmail: string
     let stripeCustomerId: string | null = null
@@ -80,6 +80,13 @@ export async function POST(request: Request) {
           return NextResponse.json(
             { error: 'Payment not completed. Please complete checkout first.' },
             { status: 402 },
+          )
+        }
+
+        if (!checkoutRef || session.client_reference_id !== checkoutRef) {
+          return NextResponse.json(
+            { error: 'Invalid checkout verification. Open the registration link from your payment confirmation email or pricing page.' },
+            { status: 403 },
           )
         }
 

@@ -25,7 +25,17 @@ export async function POST(request: NextRequest) {
     focusAreas?: string[]
   }
 
-  const { athleteId, weekOf, focusAreas } = body
+  const { athleteId, weekOf } = body
+  let focusAreas = body.focusAreas
+  if (focusAreas && Array.isArray(focusAreas)) {
+    focusAreas = focusAreas
+      .slice(0, 10)
+      .map((s) => (typeof s === 'string' ? s.trim().slice(0, 200) : ''))
+      .filter(Boolean)
+    if (focusAreas.length === 0) focusAreas = undefined
+  } else {
+    focusAreas = undefined
+  }
 
   if (!athleteId || !weekOf) {
     return Response.json({ error: 'athleteId and weekOf are required' }, { status: 400 })

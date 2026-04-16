@@ -10,9 +10,14 @@ export async function GET(request: NextRequest) {
   }
 
   const sessionId = request.nextUrl.searchParams.get('session_id')
+  const checkoutRef = request.nextUrl.searchParams.get('ref')
 
   if (!sessionId || typeof sessionId !== 'string' || sessionId.length > 200) {
     return Response.json({ error: 'Missing or invalid session_id' }, { status: 400 })
+  }
+
+  if (!checkoutRef || !/^[a-f0-9]{32}$/.test(checkoutRef)) {
+    return Response.json({ error: 'Missing or invalid ref' }, { status: 400 })
   }
 
   // Only allow Stripe checkout session IDs (cs_live_* or cs_test_*)
@@ -22,6 +27,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+    if (session.client_reference_id !== checkoutRef) {
+      return Response.json({ error: 'Invalid session' }, { status: 403 })
+    }
 
     if (session.status !== 'complete' && session.payment_status !== 'paid') {
       return Response.json({ error: 'Payment not completed' }, { status: 402 })

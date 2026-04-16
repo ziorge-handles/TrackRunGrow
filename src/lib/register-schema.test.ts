@@ -35,4 +35,21 @@ describe('registerSchema', () => {
     })
     expect(r.success).toBe(true)
   })
+
+  it('requires checkoutRef when stripeSessionId is set', () => {
+    const missingRef = registerSchema.safeParse({
+      name: 'Coach Name',
+      password: 'GoodPass1',
+      stripeSessionId: 'cs_test_abc',
+    })
+    expect(missingRef.success).toBe(false)
+
+    const ok = registerSchema.safeParse({
+      name: 'Coach Name',
+      password: 'GoodPass1',
+      stripeSessionId: 'cs_test_abc',
+      checkoutRef: 'a'.repeat(32),
+    })
+    expect(ok.success).toBe(true)
+  })
 })

@@ -20,6 +20,7 @@
     "seed": "node --import jiti/register prisma/seed.ts"
   },
   "dependencies": {
+    "@auth/core": "0.41.0",
     "@anthropic-ai/sdk": "^0.87.0",
     "@fullcalendar/core": "^6.1.20",
     "@fullcalendar/daygrid": "^6.1.20",

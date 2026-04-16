@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { NextRequest } from 'next/server'
 import Stripe from 'stripe'
 import { stripe, PLANS, getOrLookupPriceId, stripeSecretKey } from '@/lib/stripe'
@@ -41,12 +42,14 @@ export async function POST(request: NextRequest) {
   try {
     const priceId = await getOrLookupPriceId(planKey)
     const baseUrl = getPublicSiteOrigin()
+    const checkoutRef = randomBytes(16).toString('hex')
 
     const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${baseUrl}/register?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}`,
+      client_reference_id: checkoutRef,
+      success_url: `${baseUrl}/register?session_id={CHECKOUT_SESSION_ID}&plan=${planKey}&ref=${checkoutRef}`,
       cancel_url: `${baseUrl}/#pricing`,
       metadata: { plan: planKey },
     }

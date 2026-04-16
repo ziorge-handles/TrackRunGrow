@@ -52,12 +52,15 @@ function RegisterForm() {
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get('invite_token')
   const sessionId = searchParams.get('session_id')
+  const checkoutRef = searchParams.get('ref')
   const planFromUrl = searchParams.get('plan')
 
   const [isLoading, setIsLoading] = useState(false)
   const [stripeEmail, setStripeEmail] = useState<string | null>(null)
   const [stripePlan, setStripePlan] = useState<string | null>(planFromUrl)
-  const [loadingSession, setLoadingSession] = useState(!!sessionId && !inviteToken)
+  const [loadingSession, setLoadingSession] = useState(
+    !!sessionId && !inviteToken && !!checkoutRef && /^[a-f0-9]{32}$/.test(checkoutRef),
+  )
 
   const [invitePreview, setInvitePreview] = useState<{
     invitedEmail: string
@@ -124,11 +127,21 @@ function RegisterForm() {
 
   useEffect(() => {
     if (!sessionId || inviteToken) return
+    if (!checkoutRef || !/^[a-f0-9]{32}$/.test(checkoutRef)) {
+      toast.error(
+        'This registration link is incomplete or expired. Please return to pricing and start checkout again.',
+      )
+      setLoadingSession(false)
+      return
+    }
     let cancelled = false
 
     async function fetchSessionInfo() {
+      const sid = sessionId as string
+      const ref = checkoutRef as string
       try {
-        const res = await fetch(`/api/stripe/session-info?session_id=${sessionId}`)
+        const q = new URLSearchParams({ session_id: sid, ref })
+        const res = await fetch(`/api/stripe/session-info?${q}`)
         const data = await res.json() as { email?: string; plan?: string; error?: string }
         if (cancelled) return
 
@@ -148,7 +161,7 @@ function RegisterForm() {
 
     fetchSessionInfo()
     return () => { cancelled = true }
-  }, [sessionId, inviteToken])
+  }, [sessionId, inviteToken, checkoutRef])
 
   const onSubmitInvite = async (data: RegisterFormData) => {
     if (!inviteToken) return
@@ -179,7 +192,14 @@ function RegisterForm() {
   }
 
   const onSubmitStripe = async (data: RegisterFormData) => {
-    if (!stripeEmail) return
+    if (
+      !stripeEmail ||
+      !sessionId ||
+      !checkoutRef ||
+      !/^[a-f0-9]{32}$/.test(checkoutRef)
+    ) {
+      return
+    }
     setIsLoading(true)
 
     try {
@@ -191,6 +211,7 @@ function RegisterForm() {
           email: stripeEmail,
           password: data.password,
           stripeSessionId: sessionId,
+          checkoutRef,
         }),
       })
 
