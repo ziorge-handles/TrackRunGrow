@@ -10,11 +10,22 @@ class EmailNotVerified extends CredentialsSignin {
   code = 'email_not_verified'
 }
 
+function resolveAuthSecret(): string | undefined {
+  const s =
+    process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim()
+  if (s) return s
+  // validateEnv only warns in development; JWT encode requires a real secret.
+  if (process.env.NODE_ENV !== 'production') {
+    return 'trackrungrow-dev-auth-secret-not-for-production'
+  }
+  return undefined
+}
+
 const { handlers, auth: authInternal, signIn, signOut } = NextAuth({
   // Required on Vercel / reverse proxies unless AUTH_URL matches the public origin exactly.
   trustHost: true,
-  // Explicit secret avoids empty-array edge cases when env is loaded late; validateEnv already requires AUTH_SECRET in production.
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  // Trimmed; dev fallback so local sign-in does not 500 when AUTH_SECRET is unset (production still requires it via validateEnv).
+  secret: resolveAuthSecret(),
   debug: isVerboseServerDebug(),
   // JWT sessions + credentials provider do not use the Prisma adapter; omitting it avoids duplicate @auth/core copies and adapter edge cases.
   session: { strategy: 'jwt' },

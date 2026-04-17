@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 
-// Next.js 16 proxy — runs on every matched route (Edge Runtime).
-// Reads cookies for optimistic auth checks — no DB calls.
+// Next.js 16 proxy — runs on matched routes.
+// Reads request cookies for optimistic auth checks — no DB calls.
+// Use NextRequest.cookies (see Next.js proxy docs); do not use cookies() from
+// next/headers here — that API is for Server Components / Route Handlers.
 // Actual role verification happens server-side in layouts/API routes.
+
+/** True if the request carries an Auth.js session cookie (including JWT chunks). */
+function hasAuthJsSessionCookie(req: NextRequest): boolean {
+  for (const { name } of req.cookies.getAll()) {
+    if (name === 'authjs.session-token' || name === '__Secure-authjs.session-token') {
+      return true
+    }
+    if (
+      name.startsWith('authjs.session-token.') ||
+      name.startsWith('__Secure-authjs.session-token.')
+    ) {
+      return true
+    }
+  }
+  return false
+}
 
 const PUBLIC_PATHS = new Set([
   '/',
@@ -48,19 +65,14 @@ function isPublicPath(path: string): boolean {
   return false
 }
 
-export default async function proxy(req: NextRequest) {
+export default function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname
 
   if (isPublicPath(path)) {
     return NextResponse.next()
   }
 
-  const cookieStore = await cookies()
-  const sessionToken =
-    cookieStore.get('authjs.session-token')?.value ??
-    cookieStore.get('__Secure-authjs.session-token')?.value
-
-  if (!sessionToken) {
+  if (!hasAuthJsSessionCookie(req)) {
     const loginUrl = new URL('/login', req.nextUrl)
     const fullPath = `${req.nextUrl.pathname}${req.nextUrl.search}`
     loginUrl.searchParams.set('callbackUrl', fullPath)
