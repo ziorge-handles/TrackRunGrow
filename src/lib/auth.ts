@@ -56,7 +56,9 @@ const { handlers, auth: authInternal, signIn, signOut } = NextAuth({
 
           if (!isValid) return null
 
-          if (!user.emailVerified) {
+          // Self-serve signups must verify email. ADMIN accounts are often created
+          // or promoted before this flow existed; require verification for everyone else.
+          if (!user.emailVerified && user.role !== 'ADMIN') {
             throw new EmailNotVerified()
           }
 
