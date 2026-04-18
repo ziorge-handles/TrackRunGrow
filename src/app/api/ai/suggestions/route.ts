@@ -147,7 +147,7 @@ Please provide a complete 7-day training plan with:
   let fullResponse = ''
 
   const stream = await anthropic.messages.stream({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 3000,
     messages: [{ role: 'user', content: userPrompt }],
     system: systemPrompt,

@@ -1,16 +1,28 @@
 import sgMail from '@sendgrid/mail'
 
-let _initialized = false
+let _ready = false
+let _configMissing = false
 
-function initSendGrid(): void {
-  if (_initialized) return
+function initSendGrid(): boolean {
+  if (_ready) return true
+  if (_configMissing) return false
   const key = process.env.SENDGRID_API_KEY
   if (!key) {
-    console.warn('SENDGRID_API_KEY is not set — emails will not be sent')
-    return
+    console.warn('[email] SENDGRID_API_KEY is not set — emails will not be sent')
+    _configMissing = true
+    return false
   }
   sgMail.setApiKey(key)
-  _initialized = true
+  _ready = true
+  return true
+}
+
+function guardSend(context: string): boolean {
+  if (initSendGrid()) return true
+  if (process.env.NODE_ENV === 'production') {
+    console.error(`[email] Cannot send "${context}" — SENDGRID_API_KEY is not configured`)
+  }
+  return false
 }
 
 const FROM = process.env.SENDGRID_FROM_EMAIL || 'TrackRunGrow <noreply@trackrungrow.com>'
@@ -67,8 +79,7 @@ export async function sendTeamInvitation({
   inviterName: string
   inviteUrl: string
 }): Promise<void> {
-  initSendGrid()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!guardSend('sendTeamInvitation')) return
 
   const html = baseTemplate(
     'Team Invitation',
@@ -95,8 +106,7 @@ export async function sendWelcomeEmail({
   to: string
   name: string
 }): Promise<void> {
-  initSendGrid()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!guardSend('sendWelcomeEmail')) return
 
   const html = baseTemplate(
     'Welcome to TrackRunGrow',
@@ -124,8 +134,7 @@ export async function sendMfaCode({
   to: string
   code: string
 }): Promise<void> {
-  initSendGrid()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!guardSend('sendMfaCode')) return
 
   const html = baseTemplate(
     'Your Verification Code',
@@ -159,8 +168,7 @@ export async function sendFeeReminder({
   amount: number
   dueDate: string
 }): Promise<void> {
-  initSendGrid()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!guardSend('sendFeeReminder')) return
 
   const dollars = (amount / 100).toFixed(2)
 
@@ -193,8 +201,7 @@ export async function sendFeeReminder({
 }
 
 export async function sendPasswordResetEmail({ to, resetUrl }: { to: string; resetUrl: string }): Promise<void> {
-  initSendGrid()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!guardSend('sendPasswordResetEmail')) return
 
   const html = baseTemplate(
     'Reset Your Password',
@@ -213,8 +220,7 @@ export async function sendPasswordResetEmail({ to, resetUrl }: { to: string; res
 }
 
 export async function sendVerificationEmail({ to, verifyUrl }: { to: string; verifyUrl: string }): Promise<void> {
-  initSendGrid()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!guardSend('sendVerificationEmail')) return
 
   const html = baseTemplate(
     'Verify Your Email',
@@ -242,8 +248,7 @@ export async function sendMessageNotification({
   teamName: string
   subject: string
 }): Promise<void> {
-  initSendGrid()
-  if (!process.env.SENDGRID_API_KEY) return
+  if (!guardSend('sendMessageNotification')) return
 
   const html = baseTemplate(
     'New Message',
