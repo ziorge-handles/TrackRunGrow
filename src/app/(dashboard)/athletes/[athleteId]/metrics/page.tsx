@@ -19,7 +19,7 @@ export default async function AthleteMetricsPage({ params }: PageProps) {
   const { athleteId } = await params
 
   // Access check
-  if (session.user.role === 'COACH') {
+  if ((session.user.role === 'COACH' || session.user.role === 'ADMIN')) {
     const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
     if (!coach) notFound()
     const athlete = await prisma.athlete.findUnique({
@@ -62,7 +62,7 @@ export default async function AthleteMetricsPage({ params }: PageProps) {
           <BarChart2 className="w-5 h-5 text-blue-600" />
           <h2 className="text-xl font-bold text-gray-900">Body Metrics</h2>
         </div>
-        {session.user.role === 'COACH' && <AddMetricModal athleteId={athleteId} />}
+        {(session.user.role === 'COACH' || session.user.role === 'ADMIN') && <AddMetricModal athleteId={athleteId} />}
       </div>
 
       {chartData.length > 0 && (

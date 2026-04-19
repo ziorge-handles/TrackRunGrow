@@ -19,7 +19,7 @@ export default async function AthletePerformancePage({ params, searchParams }: P
   const { eventId } = await searchParams
 
   // Verify access
-  if (session.user.role === 'COACH') {
+  if ((session.user.role === 'COACH' || session.user.role === 'ADMIN')) {
     const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
     if (!coach) notFound()
 

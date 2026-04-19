@@ -20,7 +20,7 @@ export default async function AthleteWorkoutsPage({ params, searchParams }: Page
   const { type } = await searchParams
 
   // Access check
-  if (session.user.role === 'COACH') {
+  if ((session.user.role === 'COACH' || session.user.role === 'ADMIN')) {
     const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
     if (!coach) notFound()
     const athlete = await prisma.athlete.findUnique({ where: { id: athleteId }, include: { teams: true } })

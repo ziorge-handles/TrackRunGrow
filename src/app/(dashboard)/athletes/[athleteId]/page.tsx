@@ -19,7 +19,7 @@ export default async function AthleteProfilePage({ params }: PageProps) {
   const { athleteId } = await params
 
   let athlete
-  if (session.user.role === 'COACH') {
+  if ((session.user.role === 'COACH' || session.user.role === 'ADMIN')) {
     const coach = await prisma.coach.findUnique({ where: { userId: session.user.id } })
     if (!coach) notFound()
 
@@ -86,7 +86,7 @@ export default async function AthleteProfilePage({ params }: PageProps) {
 
   const weeklyMileage = weeklyWorkouts.reduce((s, w) => s + (w.distanceMiles ?? 0), 0)
   const latestMetrics = athlete.bodyMetrics[0]
-  const isCoach = session.user.role === 'COACH'
+  const isCoach = (session.user.role === 'COACH' || session.user.role === 'ADMIN')
   const basePath = isCoach ? `/athletes/${athleteId}` : `/portal`
 
   const tabs = isCoach
