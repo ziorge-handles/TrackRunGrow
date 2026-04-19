@@ -17,25 +17,23 @@ export default function SportToggle() {
       />
       <button
         onClick={() => setSport('XC')}
+        style={sport === 'XC' ? { color: '#059669' } : undefined}
         className={cn(
           'relative z-10 flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 ease-in-out text-center',
-          sport === 'XC'
-            ? 'text-emerald-700'
-            : 'text-gray-500 hover:text-gray-700',
+          sport !== 'XC' && 'text-gray-500 hover:text-gray-700',
         )}
       >
         Cross Country
       </button>
       <button
         onClick={() => setSport('TRACK')}
+        style={sport === 'TRACK' ? { color: '#dc2626' } : undefined}
         className={cn(
           'relative z-10 flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 ease-in-out text-center',
-          sport === 'TRACK'
-            ? 'text-blue-700'
-            : 'text-gray-500 hover:text-gray-700',
+          sport !== 'TRACK' && 'text-gray-500 hover:text-gray-700',
         )}
       >
-        Track
+        Track & Field
       </button>
     </div>
   )

@@ -34,7 +34,7 @@ export async function GET(
   { params }: { params: Promise<{ teamId: string }> },
 ) {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'COACH') {
+  if (!session?.user || session.user.role !== 'COACH' && session.user.role !== 'ADMIN') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -57,7 +57,7 @@ export async function POST(
   { params }: { params: Promise<{ teamId: string }> },
 ) {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'COACH') {
+  if (!session?.user || session.user.role !== 'COACH' && session.user.role !== 'ADMIN') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

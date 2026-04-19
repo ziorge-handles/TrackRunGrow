@@ -119,11 +119,17 @@ textarea::placeholder {
   color: #ffffff;
 }
 
-/* Fix date input calendar icon */
+/* Fix date input calendar icon — ensure it has room and is visible */
+input[type="date"],
+input[type="datetime-local"] {
+  padding-right: 0.5rem;
+}
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 
 /* Accent color system */
@@ -160,6 +166,14 @@ input:focus, textarea:focus, select:focus {
 }
 .nav-active .nav-icon { color: var(--accent); }
 
+/* Light mode explicit resets so switching back from dark is clean */
+:root:not(.dark) body { background-color: #ffffff; color: #171717; }
+:root:not(.dark) input, :root:not(.dark) textarea, :root:not(.dark) select {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
 /* Dark mode base styles */
 .dark {
   color-scheme: dark;
@@ -175,8 +189,9 @@ input:focus, textarea:focus, select:focus {
 .dark .text-gray-800 { color: #e2e8f0; }
 .dark .text-gray-700 { color: #cbd5e1; }
 .dark .text-gray-600 { color: #94a3b8; }
-.dark .text-gray-500 { color: #64748b; }
-.dark .text-gray-400 { color: #475569; }
+/* gray-500/400 need to be light enough to read on dark backgrounds */
+.dark .text-gray-500 { color: #94a3b8; }
+.dark .text-gray-400 { color: #64748b; }
 .dark .border-gray-200 { border-color: #334155; }
 .dark .border-gray-100 { border-color: #1e293b; }
 .dark input, .dark textarea, .dark select {

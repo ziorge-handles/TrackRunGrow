@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { Sport } from '@/generated/prisma/client'
 
 interface SportContextValue {
@@ -11,6 +11,20 @@ interface SportContextValue {
 const SportContext = createContext<SportContextValue | null>(null)
 
 const STORAGE_KEY = 'trackrungrow-sport'
+
+const SPORT_VARS: Record<Sport, { primary: string; light: string; text: string }> = {
+  XC: { primary: '#10b981', light: '#ecfdf5', text: '#059669' },
+  TRACK: { primary: '#ef4444', light: '#fef2f2', text: '#dc2626' },
+}
+
+function applySportVars(sport: Sport) {
+  if (typeof document === 'undefined') return
+  const vars = SPORT_VARS[sport]
+  document.documentElement.setAttribute('data-sport', sport)
+  document.documentElement.style.setProperty('--accent', vars.primary)
+  document.documentElement.style.setProperty('--accent-light', vars.light)
+  document.documentElement.style.setProperty('--accent-text', vars.text)
+}
 
 function getInitialSport(): Sport {
   if (typeof window === 'undefined') return 'XC'
@@ -25,6 +39,11 @@ function getInitialSport(): Sport {
 
 export function SportProvider({ children }: { children: React.ReactNode }) {
   const [sport, setSportState] = useState<Sport>(getInitialSport)
+
+  // Apply CSS vars on mount and whenever sport changes
+  useEffect(() => {
+    applySportVars(sport)
+  }, [sport])
 
   const setSport = useCallback((newSport: Sport) => {
     setSportState(newSport)

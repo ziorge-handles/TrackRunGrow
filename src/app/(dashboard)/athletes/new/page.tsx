@@ -24,7 +24,6 @@ export default function NewAthletePage() {
   const [form, setForm] = useState({
     name: '',
     email: '',
-    password: '',
     teamId: '',
     graduationYear: '',
     gender: '',
@@ -52,8 +51,8 @@ export default function NewAthletePage() {
     setLoading(true)
     setError(null)
 
-    if (!form.name.trim() || !form.email.trim() || !form.password.trim() || !form.teamId) {
-      setError('Name, email, password, and team are required.')
+    if (!form.name.trim() || !form.email.trim() || !form.teamId) {
+      setError('Name, email, and team are required.')
       setLoading(false)
       return
     }
@@ -65,7 +64,6 @@ export default function NewAthletePage() {
         body: JSON.stringify({
           name: form.name.trim(),
           email: form.email.trim(),
-          password: form.password,
           teamId: form.teamId,
           graduationYear: form.graduationYear ? parseInt(form.graduationYear) : undefined,
           gender: form.gender || undefined,
@@ -101,7 +99,7 @@ export default function NewAthletePage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Add New Athlete</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Create a new athlete account and add them to your team.
+          Add an athlete to your team. If they don&apos;t have an account yet, one will be created automatically and a welcome email will be sent.
         </p>
       </div>
 
@@ -138,21 +136,6 @@ export default function NewAthletePage() {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="athlete@example.com"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">
-                  Temporary Password <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Minimum 8 characters"
-                  minLength={8}
                   required
                 />
               </div>

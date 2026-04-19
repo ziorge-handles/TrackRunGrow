@@ -6,7 +6,7 @@ async function handleModeration(request: Request): Promise<NextResponse> {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (session.user.role !== 'COACH' && session.user.role !== 'ADMIN') {
+  if (session.user.role !== 'COACH' && session.user.role !== 'ADMIN' && session.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Only coaches and admins can moderate reviews' }, { status: 403 })
   }
 

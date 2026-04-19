@@ -78,6 +78,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       email,
       role: role as 'COACH' | 'ATHLETE' | 'ADMIN',
       passwordHash,
+      emailVerified: new Date(),
     },
     select: {
       id: true,

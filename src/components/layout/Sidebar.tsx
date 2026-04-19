@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SportToggle from './SportToggle'
+import { useSport } from '@/lib/sport-context'
 
 interface NavItem {
   href: string
@@ -88,8 +89,10 @@ const navSections: NavSection[] = [
 export default function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { sport } = useSport()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const brandBg = sport === 'TRACK' ? '#ef4444' : '#10b981'
 
   const isAdmin = (session?.user as { role?: string } | undefined)?.role === 'ADMIN'
 
@@ -112,7 +115,7 @@ export default function Sidebar() {
       {/* Brand + Sport Toggle */}
       <div className="px-6 py-5 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-600 flex-shrink-0">
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 transition-colors duration-300" style={{ backgroundColor: brandBg }}>
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">

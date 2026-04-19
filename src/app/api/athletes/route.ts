@@ -9,7 +9,7 @@ import { BCRYPT_ROUNDS } from '@/lib/constants'
 
 export async function GET(request: NextRequest) {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'COACH') {
+  if (!session?.user || session.user.role !== 'COACH' && session.user.role !== 'ADMIN') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'COACH') {
+  if (!session?.user || session.user.role !== 'COACH' && session.user.role !== 'ADMIN') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

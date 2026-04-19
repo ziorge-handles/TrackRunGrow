@@ -6,8 +6,15 @@ export default function CookieConsent() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (!localStorage.getItem('cookie-consent')) {
-      setVisible(true)
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled) return
+      if (!localStorage.getItem('cookie-consent')) {
+        setVisible(true)
+      }
+    })
+    return () => {
+      cancelled = true
     }
   }, [])
 

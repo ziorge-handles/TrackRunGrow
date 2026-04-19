@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   const session = await auth()
-  if (!session?.user || session.user.role !== 'COACH') {
+  if (!session?.user || session.user.role !== 'COACH' && session.user.role !== 'ADMIN') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
