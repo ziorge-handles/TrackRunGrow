@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-
-function hasConsent() {
-  if (typeof window === 'undefined') return true
-  return !!localStorage.getItem('cookie-consent')
-}
+import { useState, useEffect } from 'react'
 
 export default function CookieConsent() {
-  const [visible, setVisible] = useState(() => !hasConsent())
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (!localStorage.getItem('cookie-consent')) {
+      setVisible(true)
+    }
+  }, [])
 
   const handleAccept = () => {
     localStorage.setItem('cookie-consent', 'true')

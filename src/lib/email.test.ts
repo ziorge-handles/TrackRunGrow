@@ -44,7 +44,7 @@ describe('sendVerificationEmail', () => {
 describe('sendPasswordResetEmail', () => {
   it('logs console.error in production when SENDGRID_API_KEY is absent', async () => {
     delete process.env.SENDGRID_API_KEY
-    process.env.NODE_ENV = 'production'
+    vi.stubEnv('NODE_ENV', 'production')
     const sendMock = vi.fn()
     vi.doMock('@sendgrid/mail', () => ({ default: { setApiKey: vi.fn(), send: sendMock } }))
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -55,6 +55,7 @@ describe('sendPasswordResetEmail', () => {
 
     expect(sendMock).not.toHaveBeenCalled()
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('sendPasswordResetEmail'))
+    vi.unstubAllEnvs()
   })
 
   it('calls sgMail.send with correct subject', async () => {
@@ -91,7 +92,7 @@ describe('sendWelcomeEmail', () => {
 describe('sendMfaCode', () => {
   it('does not send in dev when key is missing (no error log)', async () => {
     delete process.env.SENDGRID_API_KEY
-    process.env.NODE_ENV = 'development'
+    vi.stubEnv('NODE_ENV', 'development')
     const sendMock = vi.fn()
     vi.doMock('@sendgrid/mail', () => ({ default: { setApiKey: vi.fn(), send: sendMock } }))
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -102,5 +103,6 @@ describe('sendMfaCode', () => {
 
     expect(sendMock).not.toHaveBeenCalled()
     expect(errorSpy).not.toHaveBeenCalled()
+    vi.unstubAllEnvs()
   })
 })
